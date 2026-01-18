@@ -9,6 +9,7 @@ class ExampleTest extends ExternalProcessDDT {
 
     @Override
     protected String getName() {
+        // Searches for files in `resources/exe/example`
         return "example";
     }
 

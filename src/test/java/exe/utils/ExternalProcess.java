@@ -30,9 +30,12 @@ public abstract class ExternalProcess {
     protected static final Path TEMP_SOURCE_DIR = OUTPUT_DIR;
 
     /**
-     * Example: "expr", "stmt"
+     * Defaults to `resources/exe`
+     * Example: "expr" -> `resources/exe/expr`
      */
-    protected abstract String getName();
+    protected String getName() {
+        return "";
+    }
 
     // ---- lifecycle ----
 

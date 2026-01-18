@@ -8,11 +8,6 @@ import java.util.stream.Stream;
 class ExprStringsTest extends ExternalProcessDDT {
 
     @Override
-    protected String getName() {
-        return "expr";
-    }
-
-    @Override
     protected Stream<SuccessCase> echoCases() {
         return Stream.of(
                 // Different values
