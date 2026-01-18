@@ -1,5 +1,8 @@
 package com.phpjvm;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -126,4 +129,44 @@ public final class PhpRuntime {
         }
         return c;
     }
+
+    private static final BufferedReader STDIN_READER =
+            new BufferedReader(new InputStreamReader(System.in));
+
+    public static BasePhpValue callFunction(String name, BasePhpValue[] args) {
+        if (name == null) name = "";
+        if (args == null) args = new BasePhpValue[0];
+
+        String n = norm(name);
+
+        return switch (n) {
+            case "fgets" -> builtinFgets();
+            case "fgetc" -> builtinFgetc();
+            default -> throw new BasePhpValue.PhpRuntimeException(
+                    "Call to undefined function " + name + "()"
+            );
+        };
+    }
+
+    private static BasePhpValue builtinFgets() {
+        try {
+            String line = STDIN_READER.readLine();
+            if (line == null) return BasePhpValue.of(false); // EOF -> false (PHP-like)
+            // PHP fgets() keeps the trailing newline when it exists
+            return BasePhpValue.of(line + "\n");
+        } catch (IOException e) {
+            throw new BasePhpValue.PhpRuntimeException("stdin read failed: " + e.getMessage());
+        }
+    }
+
+    private static BasePhpValue builtinFgetc() {
+        try {
+            int ch = STDIN_READER.read();
+            if (ch < 0) return BasePhpValue.of(false); // EOF -> false
+            return BasePhpValue.of(String.valueOf((char) ch));
+        } catch (IOException e) {
+            throw new BasePhpValue.PhpRuntimeException("stdin read failed: " + e.getMessage());
+        }
+    }
+
 }
