@@ -37,7 +37,7 @@ class ExampleTest extends ExternalProcess {
 
     @Test
     void phpErrorWithMessage() throws Exception {
-        assertPhpError("<?php echo \"324 + \"hi\";", "Unsupported operand types: int + string");
+        assertPhpError("<?php echo 324 + \"hi\";", "Unsupported operand types: string + int");
     }
 
     @Test
@@ -52,6 +52,6 @@ class ExampleTest extends ExternalProcess {
 
     @Test
     void echoErrorWithMessage() throws Exception {
-        assertPhpEchoError("324 + \"hi\"", "Unsupported operand types: int + string");
+        assertPhpEchoError("324 + \"hi\"", "Unsupported operand types: string + int");
     }
 }
