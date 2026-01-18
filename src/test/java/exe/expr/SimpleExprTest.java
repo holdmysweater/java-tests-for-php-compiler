@@ -1,11 +1,12 @@
 package exe.expr;
 
 import exe.utils.ExternalProcessDDT;
+import exe.utils.ddt.ErrorCase;
 import exe.utils.ddt.SuccessCase;
 
 import java.util.stream.Stream;
 
-class ExprStringsTest extends ExternalProcessDDT {
+class SimpleExprTest extends ExternalProcessDDT {
 
     @Override
     protected Stream<SuccessCase> echoCases() {
@@ -17,6 +18,14 @@ class ExprStringsTest extends ExternalProcessDDT {
                 // Number cases
                 new SuccessCase("10 + 15", "25"),
                 new SuccessCase("10 . 15", "1015")
+        );
+    }
+
+    @Override
+    protected Stream<ErrorCase> echoErrorCases() {
+        return Stream.of(
+                // Different types
+                new ErrorCase("324 + \"hi\"")
         );
     }
 
