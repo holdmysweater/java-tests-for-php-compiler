@@ -23,7 +23,8 @@ public final class BasePhpValue {
         INT,
         FLOAT,
         STRING,
-        ARRAY
+        ARRAY,
+        OBJECT
     }
 
     // ---------- Singletons / factories ----------
@@ -47,6 +48,11 @@ public final class BasePhpValue {
 
     public static BasePhpValue array() {
         return new BasePhpValue(Type.ARRAY, new PhpArray());
+    }
+
+    public static BasePhpValue object(PhpObject o) {
+        if (o == null) return NULL_VALUE;
+        return new BasePhpValue(Type.OBJECT, o);
     }
 
     /**
@@ -133,6 +139,10 @@ public final class BasePhpValue {
         return type == Type.ARRAY;
     }
 
+    public boolean isObject() {
+        return type == Type.OBJECT;
+    }
+
     // ---------- Accessors ----------
     public boolean asBoolStrict() {
         if (!isBool()) throw cant("bool");
@@ -159,6 +169,11 @@ public final class BasePhpValue {
         return (PhpArray) value;
     }
 
+    public PhpObject asObject() {
+        if (!isObject()) throw cant("object");
+        return (PhpObject) value;
+    }
+
     private IllegalStateException cant(String target) {
         return new IllegalStateException("Can't get " + target + " from type " + type);
     }
@@ -176,10 +191,10 @@ public final class BasePhpValue {
             case FLOAT -> ((Double) value) != 0.0;
             case STRING -> {
                 String s = (String) value;
-                // PHP: "" and "0" are false; everything else true
                 yield !(s.isEmpty() || s.equals("0"));
             }
             case ARRAY -> !asArray().isEmpty();
+            case OBJECT -> true;
         };
     }
 
@@ -194,13 +209,23 @@ public final class BasePhpValue {
             case INT -> String.valueOf((Long) value);
             case FLOAT -> {
                 double d = (Double) value;
-                // keep it simple; Java formatting differs from PHP in edge cases
                 yield stripTrailingZeros(d);
             }
             case STRING -> (String) value;
             case ARRAY -> "Array";
+            case OBJECT -> {
+                PhpObject obj = (PhpObject) value;
+                // PHP: echo object requires __toString, otherwise TypeError
+                BasePhpValue r = PhpRuntime.callMethod(obj, "__toString", new BasePhpValue[0]);
+                if (r == null) r = NULL_VALUE;
+                if (!r.isString()) {
+                    throw new PhpTypeError("__toString() must return a string");
+                }
+                yield r.asStringStrict();
+            }
         };
     }
+
 
     private static String stripTrailingZeros(double d) {
         String s = Double.toString(d);
@@ -225,10 +250,10 @@ public final class BasePhpValue {
             case FLOAT -> PhpNumber.ofDouble((Double) value);
             case STRING -> {
                 PhpNumber pn = parsePhpNumber((String) value);
-                // lenient fallback to 0 to avoid NPEs in eq/lt/spaceship
                 yield (pn == null) ? PhpNumber.ofLong(0) : pn;
             }
-            case ARRAY -> PhpNumber.ofLong(0); // OR throw, but then eq/lt/spaceship must handle it
+            case ARRAY -> PhpNumber.ofLong(0); // your current behavior
+            case OBJECT -> throw new PhpTypeError("Unsupported operand type: object");
         };
     }
 
@@ -246,7 +271,7 @@ public final class BasePhpValue {
                 if (pn == null) throw unsupportedOperandTypes(op, v, other);
                 yield pn;
             }
-            case ARRAY -> throw unsupportedOperandTypes(op, v, other);
+            case ARRAY, OBJECT -> throw unsupportedOperandTypes(op, v, other);
         };
     }
 
@@ -504,27 +529,31 @@ public final class BasePhpValue {
     private static PhpNumber toNumberForRelational(BasePhpValue v) {
         if (v == null || v.type == Type.NULL) return PhpNumber.ofLong(0);
         return switch (v.type) {
+            case NULL -> PhpNumber.ofLong(0); // defensive (keeps the switch total)
             case BOOL -> PhpNumber.ofLong(((Boolean) v.value) ? 1 : 0);
             case INT -> PhpNumber.ofLong((Long) v.value);
             case FLOAT -> PhpNumber.ofDouble((Double) v.value);
             case STRING -> {
                 PhpNumber pn = parseNumericStringStrict((String) v.value);
                 // only called when numeric-string strict already checked
-                yield pn != null ? pn : PhpNumber.ofLong(0);
+                yield (pn != null) ? pn : PhpNumber.ofLong(0);
             }
             case ARRAY -> throw new PhpTypeError("Cannot compare arrays");
-            case NULL -> PhpNumber.ofLong(0);
+            case OBJECT -> throw new PhpTypeError("Cannot compare objects");
         };
     }
 
     // Core compare for <, <=, >, >=, <=>
-// Returns -1/0/1 like spaceship.
+    // Returns -1/0/1 like spaceship.
     private static int compareForRelational(BasePhpValue a, BasePhpValue b) {
         if (a == null) a = NULL_VALUE;
         if (b == null) b = NULL_VALUE;
 
         if (a.type == Type.ARRAY || b.type == Type.ARRAY) {
             throw new PhpTypeError("Cannot compare arrays");
+        }
+        if (a.type == Type.OBJECT || b.type == Type.OBJECT) {
+            throw new PhpTypeError("Cannot compare objects");
         }
 
         boolean an = isNumericComparableForRelational(a);
@@ -533,13 +562,9 @@ public final class BasePhpValue {
         if (an && bn) {
             PhpNumber x = toNumberForRelational(a);
             PhpNumber y = toNumberForRelational(b);
-            double dx = x.asDouble();
-            double dy = y.asDouble();
-            return Double.compare(dx, dy);
+            return Double.compare(x.asDouble(), y.asDouble());
         }
 
-        // PHP 8 "saner comparisons": non-numeric string vs number => string compare
-        // We'll compare the PHP string representations.
         String sa = a.toPhpString();
         String sb = b.toPhpString();
         int c = sa.compareTo(sb);
@@ -635,6 +660,7 @@ public final class BasePhpValue {
             case NULL -> true;
             case BOOL, INT, FLOAT, STRING -> Objects.equals(a.value, b.value);
             case ARRAY -> a.asArray().equalsStrict(b.asArray());
+            case OBJECT -> a.value == b.value;
         };
     }
 
@@ -737,6 +763,7 @@ public final class BasePhpValue {
             case FLOAT -> "FLOAT(" + value + ")";
             case STRING -> "STRING(\"" + value + "\")";
             case ARRAY -> "ARRAY(" + asArray().debugString() + ")";
+            case OBJECT -> "OBJECT(" + asObject().getPhpClass().getName() + ")";
         };
     }
 
@@ -810,12 +837,12 @@ public final class BasePhpValue {
                 case FLOAT -> of((long) ((Double) v.value).doubleValue());
                 case BOOL -> of(((Boolean) v.value) ? 1L : 0L);
                 case STRING -> {
-                    // PHP: numeric-string keys like "123" become int keys in arrays
                     String s = (String) v.value;
                     PhpKey maybe = tryParseIntStringKey(s);
                     yield maybe != null ? maybe : of(s);
                 }
                 case ARRAY -> throw new PhpRuntimeException("Illegal array key type: array");
+                case OBJECT -> throw new PhpRuntimeException("Illegal array key type: object");
                 case NULL -> of("");
             };
         }
@@ -969,6 +996,7 @@ public final class BasePhpValue {
             case FLOAT -> "float";
             case STRING -> "string";
             case ARRAY -> "array";
+            case OBJECT -> "object";
         };
     }
 
