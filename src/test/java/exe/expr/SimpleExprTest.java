@@ -13,7 +13,7 @@ class SimpleExprTest extends ExternalProcessDDT {
         return Stream.of(
                 // Different values
                 new SuccessCase("123", "123"),
-                new SuccessCase("\"hi\"", "hi"),
+                new SuccessCase(" 'hi' ", "hi"),
 
                 // Number cases
                 new SuccessCase("10 + 15", "25"),
@@ -25,7 +25,7 @@ class SimpleExprTest extends ExternalProcessDDT {
     protected Stream<ErrorCase> echoErrorCases() {
         return Stream.of(
                 // Different types
-                new ErrorCase("324 + \"hi\"")
+                new ErrorCase("324 + 'hi' ")
         );
     }
 

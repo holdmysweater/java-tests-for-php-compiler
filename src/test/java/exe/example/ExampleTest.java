@@ -42,24 +42,24 @@ class ExampleTest extends ExternalProcessDDT {
     @Override
     protected Stream<SuccessCase> phpCases() {
         return Stream.of(
-                new SuccessCase("<?php echo \"hi\";", "hi"),
-                new SuccessCase("<?php echo \"123\";", "123"),
+                new SuccessCase("<?php echo 'hi';", "hi"),
+                new SuccessCase("<?php echo '123';", "123"),
                 new SuccessCase("<?php echo 2 + 3;", "5"),
-                new SuccessCase("<?php echo \"i<\" . 3 . \"u\";", "i<3u")
+                new SuccessCase("<?php echo \"i<\" . 3 . 'u';", "i<3u")
         );
     }
 
     @Override
     protected Stream<ErrorCase> phpErrorCases() {
         return Stream.of(
-                new ErrorCase("<?php echo \"324 + \"hi\";")
+                new ErrorCase("<?php echo 324 + 'hi';")
         );
     }
 
     @Override
     protected Stream<IErrorMessageCase> phpErrorMessageCases() {
         return Stream.of(
-                new UnsupportedOperandCase("<?php echo 324 + \"hi\";", "string + int")
+                new UnsupportedOperandCase("<?php echo 324 + 'hi';", "string + int")
         );
     }
 
@@ -68,21 +68,21 @@ class ExampleTest extends ExternalProcessDDT {
     @Override
     protected Stream<SuccessCase> echoCases() {
         return Stream.of(
-                new SuccessCase("\"hi\"", "hi")
+                new SuccessCase(" 'hi' ", "hi")
         );
     }
 
     @Override
     protected Stream<ErrorCase> echoErrorCases() {
         return Stream.of(
-                new ErrorCase("324 + \"hi\"")
+                new ErrorCase("324 + 'hi' ")
         );
     }
 
     @Override
     protected Stream<IErrorMessageCase> echoErrorMessageCases() {
         return Stream.of(
-                new ErrorMessageCase("324 + \"hi\"", "Unsupported operand types: string + int")
+                new ErrorMessageCase("324 + 'hi' ", "Unsupported operand types: string + int")
         );
     }
 }
