@@ -1,57 +1,87 @@
 package exe.example;
 
-import exe.ExternalProcess;
-import org.junit.jupiter.api.Test;
+import exe.utils.ExternalProcessDDT;
+import exe.utils.ddt.*;
 
-class ExampleTest extends ExternalProcess {
+import java.util.stream.Stream;
+
+class ExampleTest extends ExternalProcessDDT {
 
     @Override
     protected String getName() {
         return "example";
     }
 
-    @Test
-    void file() throws Exception {
-        assertFile("echo.php", "Hello world!");
+    /* ================= FILE ================= */
+
+    @Override
+    protected Stream<SuccessCase> fileCases() {
+        return Stream.of(
+                new SuccessCase("echo.php", "Hello world!"),
+                new SuccessCase("echo2.php", "Serendipity")
+        );
     }
 
-    @Test
-    void fileError() throws Exception {
-        assertFileError("concat.php");
+    @Override
+    protected Stream<ErrorCase> fileErrorCases() {
+        return Stream.of(
+                new ErrorCase("concat.php")
+        );
     }
 
-    @Test
-    void fileErrorWithMessage() throws Exception {
-        assertFileError("concat.php", "Unsupported operand types: string + int");
+    @Override
+    protected Stream<IErrorMessageCase> fileErrorMessageCases() {
+        return Stream.of(
+                new UnsupportedOperandCase("concat.php", "string + int")
+        );
     }
 
-    @Test
-    void php() throws Exception {
-        assertPhp("<?php echo \"hi\";", "hi");
+    /* ================= PHP ================= */
+
+    @Override
+    protected Stream<SuccessCase> phpCases() {
+        return Stream.of(
+                new SuccessCase("<?php echo \"hi\";", "hi"),
+                new SuccessCase("<?php echo \"123\";", "123"),
+                new SuccessCase("<?php echo 2 + 3;", "5"),
+                new SuccessCase("<?php echo \"i<\" . 3 . \"u\";", "i<3u")
+        );
     }
 
-    @Test
-    void phpError() throws Exception {
-        assertPhpError("<?php echo \"324 + \"hi\";");
+    @Override
+    protected Stream<ErrorCase> phpErrorCases() {
+        return Stream.of(
+                new ErrorCase("<?php echo \"324 + \"hi\";")
+        );
     }
 
-    @Test
-    void phpErrorWithMessage() throws Exception {
-        assertPhpError("<?php echo 324 + \"hi\";", "Unsupported operand types: string + int");
+    @Override
+    protected Stream<IErrorMessageCase> phpErrorMessageCases() {
+        return Stream.of(
+                new UnsupportedOperandCase("<?php echo 324 + \"hi\";", "string + int")
+        );
     }
 
-    @Test
-    void echo() throws Exception {
-        assertPhpEcho("\"hi\"", "hi");
+    /* ================= ECHO ================= */
+
+    @Override
+    protected Stream<SuccessCase> echoCases() {
+        return Stream.of(
+                new SuccessCase("\"hi\"", "hi")
+        );
     }
 
-    @Test
-    void echoError() throws Exception {
-        assertPhpEchoError("324 + \"hi\"");
+    @Override
+    protected Stream<ErrorCase> echoErrorCases() {
+        return Stream.of(
+                new ErrorCase("324 + \"hi\"")
+        );
     }
 
-    @Test
-    void echoErrorWithMessage() throws Exception {
-        assertPhpEchoError("324 + \"hi\"", "Unsupported operand types: string + int");
+    @Override
+    protected Stream<IErrorMessageCase> echoErrorMessageCases() {
+        return Stream.of(
+                new ErrorMessageCase("324 + \"hi\"", "Unsupported operand types: string + int")
+        );
     }
 }
