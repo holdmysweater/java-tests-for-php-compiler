@@ -281,7 +281,7 @@ public final class PhpRuntime {
 
         String phpName = norm(className);
 
-        // Force-load the generated JVM class so its <clinit> registers metadata.
+        // Force JVM load so <clinit> runs and calls defineClass(...)
         jvmClassFromPhpName(phpName);
 
         PhpClass cls = requireClass(phpName);
@@ -291,9 +291,7 @@ public final class PhpRuntime {
             callMethod(obj, "__construct", args);
         } catch (BasePhpValue.PhpRuntimeException ex) {
             String msg = ex.getMessage();
-            if (msg == null || !msg.toLowerCase().contains("undefined method")) {
-                throw ex;
-            }
+            if (msg == null || !msg.toLowerCase().contains("undefined method")) throw ex;
         }
 
         return BasePhpValue.object(obj);
@@ -424,12 +422,8 @@ public final class PhpRuntime {
         PhpClass parent = null;
         String pn = norm(parentName);
         if (!pn.isEmpty()) {
-            // Ensure parent JVM class is loaded so its <clinit> can register it.
-            try {
-                jvmClassFromPhpName(pn);
-            } catch (BasePhpValue.PhpRuntimeException ignored) {
-                // fall through to require check
-            }
+            // Force-load parent JVM class so its <clinit> can register it
+            jvmClassFromPhpName(pn);
 
             parent = CLASSES.get(pn);
             if (parent == null) {
