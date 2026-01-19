@@ -143,6 +143,43 @@ public final class BasePhpValue {
         return type == Type.OBJECT;
     }
 
+    // ---------- Refs ----------
+
+    public static boolean isRef(BasePhpValue v) {
+        if (v == null) return false;
+        if (v.type != Type.OBJECT) return false;
+        Object o = v.value;
+        if (!(o instanceof PhpObject po)) return false;
+        return po.isReference();
+    }
+
+    public static BasePhpValue deref(BasePhpValue v) {
+        if (v == null) return NULL_VALUE;
+        if (v.type == Type.OBJECT && v.value instanceof PhpObject po && po.isReference()) {
+            return po.refGet();
+        }
+        return v;
+    }
+
+    public static BasePhpValue requireRef(BasePhpValue v, String fn, int index, String paramName) {
+        if (!isRef(v)) {
+            String n = (fn == null || fn.isEmpty()) ? "<function>" : fn;
+            String p = (paramName == null || paramName.isEmpty()) ? "" : " ($" + paramName + ")";
+            throw new PhpTypeError(n + "(): Argument " + index + p + " must be passed by reference");
+        }
+        return v;
+    }
+
+    public static BasePhpValue assignToRef(BasePhpValue ref, BasePhpValue value) {
+        if (!isRef(ref)) {
+            throw new PhpRuntimeException("Attempt to assign to non-reference");
+        }
+        PhpObject po = (PhpObject) ref.value;
+        BasePhpValue v = (value == null) ? NULL_VALUE : value;
+        po.refSet(v);
+        return v;
+    }
+
     // ---------- Accessors ----------
     public boolean asBoolStrict() {
         if (!isBool()) throw cant("bool");
@@ -697,14 +734,18 @@ public final class BasePhpValue {
         return of(0L);
     }
 
-    /** PHP logical xor (truthiness) */
+    /**
+     * PHP logical xor (truthiness)
+     */
     public static BasePhpValue xor(BasePhpValue a, BasePhpValue b) {
         if (a == null) a = NULL_VALUE;
         if (b == null) b = NULL_VALUE;
         return of(a.toBool() ^ b.toBool());
     }
 
-    /** Bitwise AND (pragmatic: numeric-ish -> long) */
+    /**
+     * Bitwise AND (pragmatic: numeric-ish -> long)
+     */
     public static BasePhpValue bitAnd(BasePhpValue a, BasePhpValue b) {
         if (a == null) a = NULL_VALUE;
         if (b == null) b = NULL_VALUE;
@@ -713,7 +754,9 @@ public final class BasePhpValue {
         return of(x & y);
     }
 
-    /** Bitwise OR (pragmatic: numeric-ish -> long) */
+    /**
+     * Bitwise OR (pragmatic: numeric-ish -> long)
+     */
     public static BasePhpValue bitOr(BasePhpValue a, BasePhpValue b) {
         if (a == null) a = NULL_VALUE;
         if (b == null) b = NULL_VALUE;
@@ -722,7 +765,9 @@ public final class BasePhpValue {
         return of(x | y);
     }
 
-    /** Bitwise XOR (pragmatic: numeric-ish -> long) */
+    /**
+     * Bitwise XOR (pragmatic: numeric-ish -> long)
+     */
     public static BasePhpValue bitXor(BasePhpValue a, BasePhpValue b) {
         if (a == null) a = NULL_VALUE;
         if (b == null) b = NULL_VALUE;
@@ -731,14 +776,18 @@ public final class BasePhpValue {
         return of(x ^ y);
     }
 
-    /** Bitwise NOT (pragmatic: numeric-ish -> long) */
+    /**
+     * Bitwise NOT (pragmatic: numeric-ish -> long)
+     */
     public static BasePhpValue bitNot(BasePhpValue a) {
         if (a == null) a = NULL_VALUE;
         long x = a.toNumberForArithmetic().asLong();
         return of(~x);
     }
 
-    /** Left shift (<<) */
+    /**
+     * Left shift (<<)
+     */
     public static BasePhpValue shl(BasePhpValue a, BasePhpValue b) {
         if (a == null) a = NULL_VALUE;
         if (b == null) b = NULL_VALUE;
@@ -748,7 +797,9 @@ public final class BasePhpValue {
         return of(x << s);
     }
 
-    /** Right shift (>>) arithmetic shift */
+    /**
+     * Right shift (>>) arithmetic shift
+     */
     public static BasePhpValue shr(BasePhpValue a, BasePhpValue b) {
         if (a == null) a = NULL_VALUE;
         if (b == null) b = NULL_VALUE;
@@ -758,7 +809,9 @@ public final class BasePhpValue {
         return of(x >> s);
     }
 
-    /** Power (**) - pragmatic: use double math */
+    /**
+     * Power (**) - pragmatic: use double math
+     */
     public static BasePhpValue pow(BasePhpValue a, BasePhpValue b) {
         if (a == null) a = NULL_VALUE;
         if (b == null) b = NULL_VALUE;
@@ -767,7 +820,9 @@ public final class BasePhpValue {
         return of(Math.pow(x.asDouble(), y.asDouble()));
     }
 
-    /** instanceof (pragmatic: only exact class name match for now) */
+    /**
+     * instanceof (pragmatic: only exact class name match for now)
+     */
     public static BasePhpValue instanceOf(BasePhpValue left, BasePhpValue right) {
         if (left == null) left = NULL_VALUE;
         if (right == null) right = NULL_VALUE;
@@ -1063,6 +1118,71 @@ public final class BasePhpValue {
             sb.append("}");
             return sb.toString();
         }
+    }
+
+    private static boolean matchesDeclaredType(BasePhpValue v, String t) {
+        v = deref(v);
+        if (v == null) v = NULL_VALUE;
+        if (t == null) t = "";
+        t = t.trim().toLowerCase();
+
+        if (t.isEmpty() || t.equals("mixed")) return true;
+
+        boolean nullable = false;
+        if (t.startsWith("?")) {
+            nullable = true;
+            t = t.substring(1);
+        }
+
+        if (nullable && v.type == Type.NULL) return true;
+        if (t.equals("null")) return v.type == Type.NULL;
+
+        return switch (t) {
+            case "int", "integer" -> v.type == Type.INT;
+            case "float", "double" -> v.type == Type.FLOAT;
+            case "string" -> v.type == Type.STRING;
+            case "bool", "boolean" -> v.type == Type.BOOL;
+            case "array" -> v.type == Type.ARRAY;
+            case "object" -> v.type == Type.OBJECT;
+            default -> true; // unknown types treated as permissive for now
+        };
+    }
+
+    private static boolean matchesUnion(BasePhpValue v, String union) {
+        if (union == null) union = "";
+        union = union.trim();
+        if (union.isEmpty() || union.equalsIgnoreCase("mixed")) return true;
+
+        String[] parts = union.split("\\|");
+        for (String p : parts) {
+            if (matchesDeclaredType(v, p)) return true;
+        }
+        return false;
+    }
+
+    public static BasePhpValue assertParamType(BasePhpValue v, String fn, int index, String paramName, String expectedUnion) {
+        v = (v == null) ? NULL_VALUE : v;
+        if (matchesUnion(v, expectedUnion)) return v;
+
+        String n = (fn == null || fn.isEmpty()) ? "<function>" : fn;
+        String p = (paramName == null || paramName.isEmpty()) ? "" : " ($" + paramName + ")";
+        String got = phpTypeNameOf(v);
+        throw new PhpTypeError(n + "(): Argument " + index + p + " must be of type " + expectedUnion + ", " + got + " given");
+    }
+
+    public static BasePhpValue assertReturnType(BasePhpValue v, String fn, String expectedUnion) {
+        v = (v == null) ? NULL_VALUE : v;
+        if (matchesUnion(v, expectedUnion)) return v;
+
+        String n = (fn == null || fn.isEmpty()) ? "<function>" : fn;
+        String got = phpTypeNameOf(v);
+        throw new PhpTypeError(n + "(): Return value must be of type " + expectedUnion + ", " + got + " returned");
+    }
+
+    public static String phpTypeNameOf(BasePhpValue v) {
+        v = deref(v);
+        if (v == null) return "null";
+        return phpTypeName(v);
     }
 
     // ---------- Runtime type error ----------
