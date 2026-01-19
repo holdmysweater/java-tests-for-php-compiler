@@ -688,6 +688,8 @@ public final class BasePhpValue {
         return of(compareForRelational(a, b) >= 0);
     }
 
+    // ---------- Extra operators (needed by compiler) ----------
+
     public static BasePhpValue spaceship(BasePhpValue a, BasePhpValue b) {
         int c = compareForRelational(a, b);
         if (c < 0) return of(-1L);
@@ -695,6 +697,89 @@ public final class BasePhpValue {
         return of(0L);
     }
 
+    /** PHP logical xor (truthiness) */
+    public static BasePhpValue xor(BasePhpValue a, BasePhpValue b) {
+        if (a == null) a = NULL_VALUE;
+        if (b == null) b = NULL_VALUE;
+        return of(a.toBool() ^ b.toBool());
+    }
+
+    /** Bitwise AND (pragmatic: numeric-ish -> long) */
+    public static BasePhpValue bitAnd(BasePhpValue a, BasePhpValue b) {
+        if (a == null) a = NULL_VALUE;
+        if (b == null) b = NULL_VALUE;
+        long x = a.toNumberForArithmetic().asLong();
+        long y = b.toNumberForArithmetic().asLong();
+        return of(x & y);
+    }
+
+    /** Bitwise OR (pragmatic: numeric-ish -> long) */
+    public static BasePhpValue bitOr(BasePhpValue a, BasePhpValue b) {
+        if (a == null) a = NULL_VALUE;
+        if (b == null) b = NULL_VALUE;
+        long x = a.toNumberForArithmetic().asLong();
+        long y = b.toNumberForArithmetic().asLong();
+        return of(x | y);
+    }
+
+    /** Bitwise XOR (pragmatic: numeric-ish -> long) */
+    public static BasePhpValue bitXor(BasePhpValue a, BasePhpValue b) {
+        if (a == null) a = NULL_VALUE;
+        if (b == null) b = NULL_VALUE;
+        long x = a.toNumberForArithmetic().asLong();
+        long y = b.toNumberForArithmetic().asLong();
+        return of(x ^ y);
+    }
+
+    /** Bitwise NOT (pragmatic: numeric-ish -> long) */
+    public static BasePhpValue bitNot(BasePhpValue a) {
+        if (a == null) a = NULL_VALUE;
+        long x = a.toNumberForArithmetic().asLong();
+        return of(~x);
+    }
+
+    /** Left shift (<<) */
+    public static BasePhpValue shl(BasePhpValue a, BasePhpValue b) {
+        if (a == null) a = NULL_VALUE;
+        if (b == null) b = NULL_VALUE;
+        long x = a.toNumberForArithmetic().asLong();
+        long y = b.toNumberForArithmetic().asLong();
+        int s = (int) (y & 0x3F);
+        return of(x << s);
+    }
+
+    /** Right shift (>>) arithmetic shift */
+    public static BasePhpValue shr(BasePhpValue a, BasePhpValue b) {
+        if (a == null) a = NULL_VALUE;
+        if (b == null) b = NULL_VALUE;
+        long x = a.toNumberForArithmetic().asLong();
+        long y = b.toNumberForArithmetic().asLong();
+        int s = (int) (y & 0x3F);
+        return of(x >> s);
+    }
+
+    /** Power (**) - pragmatic: use double math */
+    public static BasePhpValue pow(BasePhpValue a, BasePhpValue b) {
+        if (a == null) a = NULL_VALUE;
+        if (b == null) b = NULL_VALUE;
+        PhpNumber x = a.toNumberForArithmetic();
+        PhpNumber y = b.toNumberForArithmetic();
+        return of(Math.pow(x.asDouble(), y.asDouble()));
+    }
+
+    /** instanceof (pragmatic: only exact class name match for now) */
+    public static BasePhpValue instanceOf(BasePhpValue left, BasePhpValue right) {
+        if (left == null) left = NULL_VALUE;
+        if (right == null) right = NULL_VALUE;
+
+        if (!left.isObject()) return of(false);
+
+        String want = right.toPhpString();
+        PhpObject obj = left.asObject();
+        String have = obj.getPhpClass().getName();
+
+        return of(have.equals(want));
+    }
 
     // ---------- Array operations ----------
 
