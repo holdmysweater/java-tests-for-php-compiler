@@ -830,10 +830,16 @@ public final class BasePhpValue {
         if (!left.isObject()) return of(false);
 
         String want = right.toPhpString();
-        PhpObject obj = left.asObject();
-        String have = obj.getPhpClass().getName();
+        if (want == null) want = "";
+        want = want.toLowerCase();
 
-        return of(have.equals(want));
+        PhpObject obj = left.asObject();
+        PhpClass c = obj.getPhpClass();
+        while (c != null) {
+            if (c.getName().equalsIgnoreCase(want)) return of(true);
+            c = c.getParent();
+        }
+        return of(false);
     }
 
     // ---------- Array operations ----------
