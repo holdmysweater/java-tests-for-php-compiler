@@ -236,13 +236,33 @@ public final class PhpRuntime {
     }
 
     public static BasePhpValue assertReturnType(BasePhpValue v, String[] allowed, String fnName) {
-        if (allowed == null || allowed.length == 0) return v == null ? BasePhpValue.NULL_VALUE : v;
+        BasePhpValue vv = (v == null) ? BasePhpValue.NULL_VALUE : v;
 
-        String actual = typeOf(v);
+        if (allowed == null || allowed.length == 0) return vv;
+
+        boolean wantVoid = false;
         for (String a : allowed) {
-            if (acceptsType(actual, a)) {
-                return v == null ? BasePhpValue.NULL_VALUE : v;
+            if (a != null && a.equalsIgnoreCase("void")) {
+                wantVoid = true;
+                break;
             }
+        }
+
+        String actual = typeOf(vv);
+
+        if (wantVoid) {
+            // Accept only null-ish (fall-through / `return;`)
+            if (vv == BasePhpValue.NULL_VALUE || "null".equals(actual)) {
+                return BasePhpValue.NULL_VALUE;
+            }
+            String name = (fnName == null) ? "" : fnName;
+            throw new BasePhpValue.PhpRuntimeException(
+                    "Return value of " + name + "() must be of type void, " + actual + " returned"
+            );
+        }
+
+        for (String a : allowed) {
+            if (acceptsType(actual, a)) return vv;
         }
 
         String want = joinTypes(allowed);
