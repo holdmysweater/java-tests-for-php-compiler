@@ -188,7 +188,7 @@ public final class PhpRuntime {
 
         if ("mixed".equals(allowed)) return true;
 
-        // "int|string" handled by array already, but keep safe:
+        // union support
         if (allowed.contains("|")) {
             String[] parts = allowed.split("\\|");
             for (String p : parts) {
@@ -201,6 +201,7 @@ public final class PhpRuntime {
         if ("boolean".equals(allowed)) allowed = "bool";
         if ("double".equals(allowed)) allowed = "float";
 
+        if ("void".equals(allowed)) return "null".equals(actual);
         if ("null".equals(allowed)) return "null".equals(actual);
 
         return allowed.equals(actual);
