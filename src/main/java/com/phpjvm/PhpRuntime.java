@@ -281,8 +281,10 @@ public final class PhpRuntime {
 
         String phpName = norm(className);
 
-        // Force JVM load so <clinit> runs and calls defineClass(...)
-        jvmClassFromPhpName(phpName);
+        // Force JVM load only if it's not already a registered (built-in) PhpClass
+        if (!CLASSES.containsKey(phpName)) {
+            jvmClassFromPhpName(phpName);
+        }
 
         PhpClass cls = requireClass(phpName);
         PhpObject obj = cls.newInstance();
@@ -376,6 +378,40 @@ public final class PhpRuntime {
     }
 
     private static final Map<String, PhpClass> CLASSES = new LinkedHashMap<>();
+
+    static {
+        registerBuiltinExceptions();
+    }
+
+    private static void registerBuiltinExceptions() {
+        // Only once
+        if (CLASSES.containsKey("exception")) return;
+
+        // Throwable -> Exception -> (RuntimeException, LogicException)
+        PhpClass throwable = new PhpClass("throwable", null);
+        PhpClass exception = new PhpClass("exception", throwable);
+        PhpClass runtimeEx = new PhpClass("runtimeexception", exception);
+        PhpClass logicEx = new PhpClass("logicexception", exception);
+
+        registerClass(throwable);
+        registerClass(exception);
+        registerClass(runtimeEx);
+        registerClass(logicEx);
+
+        // Minimal API: __construct($message = ""), getMessage()
+        PhpMethod ctor = (self, args) -> {
+            BasePhpValue msg = (args != null && args.length > 0 && args[0] != null) ? args[0] : BasePhpValue.of("");
+            self.setProperty("message", msg);
+            return BasePhpValue.NULL_VALUE;
+        };
+        PhpMethod getMessage = (self, args) -> self.getProperty("message");
+
+        for (PhpClass c : List.of(throwable, exception, runtimeEx, logicEx)) {
+            c.addMethod("__construct", ctor);
+            c.addMethod("getMessage", getMessage);
+        }
+    }
+
 
     public static void registerClass(PhpClass c) {
         if (c == null) throw new BasePhpValue.PhpRuntimeException("Register null class");
@@ -847,5 +883,59 @@ public final class PhpRuntime {
                 }
             }
         }, "PhpRuntimeShutdown"));
+    }
+
+    public static final class PhpThrown extends RuntimeException {
+        public final BasePhpValue value;
+
+        public PhpThrown(BasePhpValue v) {
+            super(safeMsg(v));
+            this.value = (v == null) ? BasePhpValue.NULL_VALUE : v;
+        }
+
+        private static String safeMsg(BasePhpValue v) {
+            try {
+                if (v == null) return "";
+                return v.toPhpString();
+            } catch (Throwable ignored) {
+                return "";
+            }
+        }
+    }
+
+    // Used by bytecode for "throw <expr>;"
+    public static Throwable toThrowable(BasePhpValue v) {
+        // PHP requires throwing objects; for now wrap non-objects into Exception(message)
+        BasePhpValue vv = (v == null) ? BasePhpValue.NULL_VALUE : v;
+        if (!vv.isObject()) {
+            BasePhpValue ex = newObject("Exception", new BasePhpValue[]{vv});
+            return new PhpThrown(ex);
+        }
+        return new PhpThrown(vv);
+    }
+
+    // Used by catch handler to get a PHP value from any JVM throwable
+    public static BasePhpValue unwrapThrowable(Throwable t) {
+        if (t instanceof PhpThrown pt) {
+            return pt.value == null ? BasePhpValue.NULL_VALUE : pt.value;
+        }
+        String msg = (t == null || t.getMessage() == null) ? "" : t.getMessage();
+        // Treat “foreign” throwables as RuntimeException in PHP-space
+        return newObject("RuntimeException", new BasePhpValue[]{BasePhpValue.of(msg)});
+    }
+
+    // Catch type check: is $ex instanceof <phpClassName> (via PhpClass parent chain)
+    public static boolean isInstanceOf(BasePhpValue v, String className) {
+        if (v == null || !v.isObject()) return false;
+        if (className == null) className = "";
+        String want = className.toLowerCase();
+
+        PhpObject o = v.asObject();
+        PhpClass c = o.getPhpClass();
+        while (c != null) {
+            if (c.getName().toLowerCase().equals(want)) return true;
+            c = c.getParent();
+        }
+        return false;
     }
 }
