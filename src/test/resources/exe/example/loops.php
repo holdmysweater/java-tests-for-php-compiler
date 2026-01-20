@@ -1,5 +1,5 @@
 <?php
-$n = (int)trim(fgets(STDIN));
+$n = trim(fgets(STDIN));
 
 echo "For loop: ";
 for ($i = 1; $i <= $n; $i++) {

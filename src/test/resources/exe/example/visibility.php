@@ -1,81 +1,89 @@
 <?php
-class VisibilityTest {
-    public $public = "публичное";
-    protected $protected = "защищенное";
-    private $private = "приватное";
-    
-    public function getPublic() {
+
+class VisibilityTest
+{
+    public $public = "public";
+    protected $protected = "protected";
+    private $private = "private";
+
+    public function getPublic()
+    {
         return $this->public;
     }
-    
-    protected function getProtected() {
+
+    protected function getProtected()
+    {
         return $this->protected;
     }
-    
-    private function getPrivate() {
+
+    private function getPrivate()
+    {
         return $this->private;
     }
-    
-    public function showAll() {
-        return "Внутри класса:\n" .
-               "Публичное: " . $this->public . "\n" .
-               "Защищенное: " . $this->protected . "\n" .
-               "Приватное: " . $this->private . "\n" .
-               "Публичный метод: " . $this->getPublic() . "\n" .
-               "Защищенный метод: " . $this->getProtected() . "\n" .
-               "Приватный метод: " . $this->getPrivate();
+
+    public function showAll()
+    {
+        return "Inside class:\n" .
+            "Public: " . $this->public . "\n" .
+            "Protected: " . $this->protected . "\n" .
+            "Private: " . $this->private . "\n" .
+            "Public method: " . $this->getPublic() . "\n" .
+            "Protected method: " . $this->getProtected() . "\n" .
+            "Private method: " . $this->getPrivate();
     }
 }
 
-class ChildVisibility extends VisibilityTest {
-    public function testAccess() {
-        $result = "В наследнике:\n";
-        
-        // Доступ к публичному
-        $result .= "Публичное поле: " . $this->public . "\n";
-        
-        // Доступ к защищенному
-        $result .= "Защищенное поле: " . $this->protected . "\n";
-        
-        // НЕТ доступа к приватному
-        // $result .= "Приватное поле: " . $this->private . "\n"; // Ошибка!
-        $result .= "Приватное поле: недоступно\n";
-        
-        // Вызов родительских методов
-        $result .= "Вызов родительского защищенного метода: " . $this->getProtected() . "\n";
-        
+class ChildVisibility extends VisibilityTest
+{
+    public function testAccess()
+    {
+        $result = "In child class:\n";
+
+        // Access to public
+        $result .= "Public field: " . $this->public . "\n";
+
+        // Access to protected
+        $result .= "Protected field: " . $this->protected . "\n";
+
+        // NO access to private
+        // $result .= "Private field: " . $this->private . "\n"; // Error!
+        $result .= "Private field: inaccessible\n";
+
+        // Calling parent methods
+        $result .= "Calling parent protected method: " . $this->getProtected() . "\n";
+
         return $result;
     }
 }
 
-// Чтение ввода (1 - родитель, 2 - наследник)
+// Reading input (1 - parent, 2 - child)
 $choice = trim(fgets(STDIN));
 
 if ($choice == '1') {
     $obj = new VisibilityTest();
-    echo "=== Тест в родительском классе ===\n";
+    echo "=== Test in parent class ===\n";
     echo $obj->showAll() . "\n";
-    
-    echo "\n=== Прямой доступ извне ===\n";
-    echo "Публичное поле: " . $obj->public . "\n";
-    echo "Публичный метод: " . $obj->getPublic() . "\n";
-    
-    // Попытка доступа к защищенному и приватному (должна вызвать ошибку)
+
+    echo "\n=== Direct access from outside ===\n";
+    echo "Public field: " . $obj->public . "\n";
+    echo "Public method: " . $obj->getPublic() . "\n";
+
+    // Attempt to access protected and private (should cause error)
     try {
-        echo "Защищенное поле: " . @$obj->protected . "\n";
+        echo "Protected field: " . @$obj->protected . "\n";
     } catch (Exception $e) {
-        echo "Защищенное поле: ошибка доступа\n";
+        echo "Protected field: access error\n";
     }
-    
+
     try {
-        echo "Защищенный метод: " . @$obj->getProtected() . "\n";
+        echo "Protected method: " . @$obj->getProtected() . "\n";
     } catch (Exception $e) {
-        echo "Защищенный метод: ошибка доступа\n";
+        echo "Protected method: access error\n";
     }
-    
+
 } else {
     $child = new ChildVisibility();
-    echo "=== Тест в дочернем классе ===\n";
+    echo "=== Test in child class ===\n";
     echo $child->testAccess();
 }
 ?>

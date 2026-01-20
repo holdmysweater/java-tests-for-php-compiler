@@ -5,9 +5,9 @@ $input = trim(fgets(STDIN));
 // Разные типы значений
 $types = [
     'string' => $input,
-    'int' => (int)$input,
-    'float' => (float)$input,
-    'bool' => (bool)$input,
+    'int' => $input,
+    'float' => $input,
+    'bool' => $input,
     'array' => [$input]
 ];
 

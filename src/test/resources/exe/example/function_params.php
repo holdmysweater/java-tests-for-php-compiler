@@ -1,55 +1,64 @@
 <?php
-function modifyByValue($value) {
+function modifyByValue($value)
+{
     $value = $value * 2;
     return $value;
 }
 
-function modifyByReference(&$value) {
+function modifyByReference(&$value)
+{
     $value = $value * 2;
 }
 
-class TestObject {
+class TestObject
+{
     public $value;
-    
-    public function __construct($val) {
+
+    public function __construct($val)
+    {
         $this->value = $val;
     }
 }
 
-function modifyObject(TestObject $obj) {
+function modifyObject(TestObject $obj)
+{
     $obj->value = $obj->value * 2;
 }
 
-// Чтение ввода
-$input = (int)trim(fgets(STDIN));
+// Reading input
+$input = trim(fgets(STDIN));
 
-// Тест 1: передача по значению (примитивный тип)
+// Test 1: passing by value (primitive type)
 $original = $input;
 $result = modifyByValue($original);
-echo "По значению - оригинал: $original, результат: $result\n";
+echo "By value - original: $original, result: $result\n";
 
-// Тест 2: передача по ссылке
+// Test 2: passing by reference
 $original = $input;
 modifyByReference($original);
-echo "По ссылке - измененный: $original\n";
+echo "By reference - modified: $original\n";
 
-// Тест 3: передача объекта
+// Test 3: passing object
 $obj = new TestObject($input);
 modifyObject($obj);
-echo "Объект - значение: {$obj->value}\n";
+echo "Object - value: {$obj->value}\n";
 
-// Тест 4: передача массива
+// Test 4: passing array
 $array = [$input, $input * 2];
-function modifyArray($arr) {
+function modifyArray($arr)
+{
     $arr[0] = 999;
 }
-modifyArray($array);
-echo "Массив - первый элемент: {$array[0]}\n";
 
-// Тест 5: передача массива по ссылке
-function modifyArrayByReference(&$arr) {
+modifyArray($array);
+echo "Array - first element: {$array[0]}\n";
+
+// Test 5: passing array by reference
+function modifyArrayByReference(&$arr)
+{
     $arr[0] = 777;
 }
+
 modifyArrayByReference($array);
-echo "Массив по ссылке - первый элемент: {$array[0]}";
+echo "Array by reference - first element: {$array[0]}";
 ?>

@@ -1,45 +1,56 @@
 <?php
-class Animal {
+
+class Animal
+{
     protected $name;
-    
-    public function __construct($name) {
+
+    public function __construct($name)
+    {
         $this->name = $name;
     }
-    
-    public function makeSound() {
+
+    public function makeSound()
+    {
         return "Some sound";
     }
-    
-    public function getName() {
+
+    public function getName()
+    {
         return $this->name;
     }
 }
 
-class Dog extends Animal {
-    public function makeSound() {
+class Dog extends Animal
+{
+    public function makeSound()
+    {
         return "Woof!";
     }
-    
-    public function wagTail() {
+
+    public function wagTail()
+    {
         return "{$this->name} is wagging tail";
     }
 }
 
-class Cat extends Animal {
-    public function makeSound() {
+class Cat extends Animal
+{
+    public function makeSound()
+    {
         return "Meow!";
     }
-    
-    public function climbTree() {
+
+    public function climbTree()
+    {
         return "{$this->name} is climbing a tree";
     }
 }
 
-// Чтение ввода
+// Reading input
 $input = trim(fgets(STDIN));
 $animalType = $input;
 
-// Создание объекта в зависимости от ввода
+// Creating object based on input
 if ($animalType === 'dog') {
     $animal = new Dog("Rex");
 } elseif ($animalType === 'cat') {
@@ -48,18 +59,18 @@ if ($animalType === 'dog') {
     $animal = new Animal("Unknown");
 }
 
-// Вызов методов
-echo "Имя: " . $animal->getName() . "\n";
-echo "Звук: " . $animal->makeSound() . "\n";
+// Calling methods
+echo "Name: " . $animal->getName() . "\n";
+echo "Sound: " . $animal->makeSound() . "\n";
 
-// Проверка типа
+// Type checking
 if ($animal instanceof Dog) {
-    echo "Дополнительно: " . $animal->wagTail() . "\n";
+    echo "Additionally: " . $animal->wagTail() . "\n";
 } elseif ($animal instanceof Cat) {
-    echo "Дополнительно: " . $animal->climbTree() . "\n";
+    echo "Additionally: " . $animal->climbTree() . "\n";
 }
 
-// Присваивание дочернего объекта родительской ссылке
+// Assigning child object to parent reference
 $parentRef = $animal;
-echo "Через родительскую ссылку: " . $parentRef->makeSound();
+echo "Through parent reference: " . $parentRef->makeSound();
 ?>

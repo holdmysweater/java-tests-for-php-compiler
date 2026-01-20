@@ -1,12 +1,12 @@
 <?php
-$input = trim(fgets(STDIN));
-$number = (int)$input;
+$input = fgets(STDIN);
+$number = $input;
 
 if ($number > 10) {
-    echo "Больше 10";
+    echo "Greater than 10";
 } elseif ($number > 5) {
-    echo "Больше 5, но не больше 10";
+    echo "Greater than 5, but not greater than 10";
 } else {
-    echo "5 или меньше";
+    echo "5 or less";
 }
 ?>

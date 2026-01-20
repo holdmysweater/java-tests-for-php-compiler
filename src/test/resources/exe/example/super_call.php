@@ -1,49 +1,59 @@
 <?php
-class ParentClass {
+
+class ParentClass
+{
     protected $value;
-    
-    public function __construct($value) {
+
+    public function __construct($value)
+    {
         $this->value = $value;
     }
-    
-    public function calculate() {
+
+    public function calculate()
+    {
         return $this->value * 2;
     }
-    
-    public function getInfo() {
+
+    public function getInfo()
+    {
         return "Родитель: " . $this->value;
     }
 }
 
-class ChildClass extends ParentClass {
+class ChildClass extends ParentClass
+{
     private $extra;
-    
-    public function __construct($value, $extra) {
+
+    public function __construct($value, $extra)
+    {
         parent::__construct($value);
         $this->extra = $extra;
     }
-    
+
     // Переопределение метода
-    public function calculate() {
+    public function calculate()
+    {
         // Вызов родительского метода
         $parentResult = parent::calculate();
         return $parentResult + $this->extra;
     }
-    
+
     // Дополнительный вызов родительского метода
-    public function getFullInfo() {
+    public function getFullInfo()
+    {
         $parentInfo = parent::getInfo();
         return $parentInfo . ", Дочерний: " . $this->extra;
     }
-    
+
     // Метод без super вызова
-    public function calculateDirectly() {
+    public function calculateDirectly()
+    {
         return $this->value * 3;
     }
 }
 
 // Чтение ввода
-$input = trim(fgets(STDIN));
+$input = fgets(STDIN);
 list($value, $extra) = explode(' ', $input);
 
 $child = new ChildClass((int)$value, (int)$extra);
