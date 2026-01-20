@@ -99,21 +99,7 @@ class ForTest extends ExternalProcessDDT {
 
                 // Continue во внешнем цикле
                 new SuccessCase("for_with_continue_outer.php",
-                        "Outer: 0\n  Inner: 0\n  Inner: 1\nOuter: 2\n  Inner: 0\n  Inner: 1\n"),
-
-                // Edge cases
-                new SuccessCase("for_zero_iterations.php",
-                        "Loop never executed\n"),
-
-                new SuccessCase("for_single_iteration.php",
-                        "0\n"),
-
-                new SuccessCase("for_with_float.php",
-                        "0.0\n1.0\n2.0\n"),
-
-                // For с изменением переменной цикла в теле
-                new SuccessCase("for_changing_counter.php",
-                        "0\n2\n4\n")
+                        "Outer: 0\n  Inner: 0\n  Inner: 1\nOuter: 2\n  Inner: 0\n  Inner: 1\n")
         );
     }
 

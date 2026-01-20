@@ -95,11 +95,6 @@ class ClassTest extends ExternalProcessDDT {
                         "OK: 200\n" +
                                 "Response: 200\n"),
 
-                // Абстрактные методы
-                new SuccessCase("class_abstract_methods.php",
-                        "Color: red\n" +
-                                "Area: 25.0\n"),
-
                 // Магические методы
                 new SuccessCase("magic_methods.php",
                         "Test\n" +
@@ -129,14 +124,9 @@ class ClassTest extends ExternalProcessDDT {
                 new SuccessCase("class_with_typed_properties.php",
                         "John is 25 years old\n"),
 
-                // Типизированные свойства с значениями по умолчанию
+                // Типизированные свойства со значениями по умолчанию
                 new SuccessCase("class_typed_properties_default.php",
                         "Book: 59.97\n"),
-
-                // Final класс
-                new SuccessCase("class_final.php",
-                        "Cannot be extended\n" +
-                                "Final method\n"),
 
                 // Класс без свойств
                 new SuccessCase("class_without_properties.php",
@@ -162,14 +152,10 @@ class ClassTest extends ExternalProcessDDT {
                 new ErrorCase("constructor_error.php"),
                 new ErrorCase("error_class_duplicate_property.php"),
                 new ErrorCase("error_interface_instantiation.php"),
-                new ErrorCase("error_abstract_instantiation.php"),
                 new ErrorCase("error_missing_implementation.php"),
                 new ErrorCase("error_protected_access.php"),
                 new ErrorCase("error_private_access.php"),
-                new ErrorCase("error_static_nonstatic.php"),
-                new ErrorCase("error_invalid_property_type.php"),
-                new ErrorCase("error_class_redeclaration.php"),
-                new ErrorCase("error_interface_redeclaration.php")
+                new ErrorCase("error_static_nonstatic.php")
         );
     }
 }

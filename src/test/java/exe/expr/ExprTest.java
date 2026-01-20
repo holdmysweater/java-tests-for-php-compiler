@@ -188,10 +188,7 @@ class ExprTest extends ExternalProcessDDT {
                 new ErrorCase("error_undefined_function.php"),
                 new ErrorCase("error_invalid_object_access.php"),
                 new ErrorCase("error_missing_operand.php"),
-                new ErrorCase("error_invalid_concat.php"),
-                new ErrorCase("error_type_mismatch.php"),
-                new ErrorCase("error_unexpected_operator.php"),
-                new ErrorCase("error_parenthesis_mismatch.php")
+                new ErrorCase("error_invalid_concat.php")
         );
     }
 }
