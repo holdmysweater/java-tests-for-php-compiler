@@ -231,9 +231,6 @@ public abstract class ExternalProcess {
                 OUTPUT_DIR.toAbsolutePath().toString()
         );
 
-
-        System.out.println(command);
-        
         return runProcess(command, null);
     }
 
