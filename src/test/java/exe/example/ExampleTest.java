@@ -2,6 +2,7 @@ package exe.example;
 
 import exe.utils.ExternalProcessDDT;
 import exe.utils.ddt.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.stream.Stream;
 
@@ -84,5 +85,10 @@ class ExampleTest extends ExternalProcessDDT {
         return Stream.of(
                 new ErrorMessageCase("324 + 'hi' ", "Unsupported operand types: string + int")
         );
+    }
+
+    @Test
+    void input() throws Exception {
+        assertFileWithInput("input.php", "hello", "hello");
     }
 }
