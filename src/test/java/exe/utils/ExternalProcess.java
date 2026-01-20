@@ -231,20 +231,44 @@ public abstract class ExternalProcess {
                 OUTPUT_DIR.toAbsolutePath().toString()
         );
 
+
+        System.out.println(command);
+        
         return runProcess(command, null);
     }
 
     private Result runGeneratedProgram(String mainClass, String stdin)
             throws Exception {
 
+        String javaExe = resolveJavaExecutable();
+
         List<String> command = List.of(
-                "java",
+                javaExe,
                 "-cp",
                 OUTPUT_DIR.toAbsolutePath().toString(),
                 mainClass
         );
 
         return runProcess(command, stdin);
+    }
+
+    private String resolveJavaExecutable() {
+        // 1) Prefer JAVA_HOME if set (most reliable on Windows)
+        String javaHome = System.getenv("JAVA_HOME");
+        if (javaHome != null && !javaHome.isBlank()) {
+            Path p = Paths.get(javaHome, "bin", isWindows() ? "java.exe" : "java");
+            if (Files.exists(p)) {
+                return p.toAbsolutePath().toString();
+            }
+        }
+
+        // 2) Fallback: rely on PATH
+        return "java";
+    }
+
+    private static boolean isWindows() {
+        String os = System.getProperty("os.name");
+        return os != null && os.toLowerCase().contains("win");
     }
 
     private Result runProcess(List<String> command, String stdin)

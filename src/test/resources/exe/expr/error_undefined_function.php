@@ -1,0 +1,3 @@
+<?php
+nonexistent_function();
+?>
