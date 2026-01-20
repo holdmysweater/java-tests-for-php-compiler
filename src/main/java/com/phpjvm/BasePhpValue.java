@@ -899,6 +899,80 @@ public final class BasePhpValue {
         return of(!identicalBool(a, b));
     }
 
+    // ---------- PHP builtins (bytecode-friendly) ----------
+
+    public static BasePhpValue count(BasePhpValue v) {
+        v = deref(v);
+        if (v == null || v.isNull()) return of(0L);
+        if (v.isArray()) return of((long) v.asArray().map.size());
+
+        // pragmatic: non-array, non-null => 1 (older PHP behavior)
+        // (PHP 8 throws TypeError for non-countable, but this keeps your runtime forgiving)
+        return of(1L);
+    }
+
+    public static BasePhpValue trim(BasePhpValue v) {
+        v = deref(v);
+        if (v == null || v.isNull()) return of("");
+
+        String s = v.toPhpString();
+        if (s == null) s = "";
+        // Java 11+: strips Unicode whitespace similarly to PHP's default whitespace trim (good enough)
+        return of(s.strip());
+    }
+
+    // Supports:
+    // - implode($glue, $pieces)
+    // - implode($pieces)   (compiler can pass second arg NULL)
+    // - swapped historical form: implode($pieces, $glue) (we detect and swap if first is array)
+    public static BasePhpValue implode(BasePhpValue a, BasePhpValue b) {
+        a = deref(a);
+        b = deref(b);
+        if (a == null) a = NULL_VALUE;
+        if (b == null) b = NULL_VALUE;
+
+        // one-arg form
+        if (b.isNull()) {
+            return implodeInternal(of(""), a);
+        }
+
+        // swapped form: first is array, second is glue
+        if (a.isArray() && !b.isArray()) {
+            return implodeInternal(b, a);
+        }
+
+        return implodeInternal(a, b);
+    }
+
+    private static BasePhpValue implodeInternal(BasePhpValue glue, BasePhpValue pieces) {
+        glue = deref(glue);
+        pieces = deref(pieces);
+        if (glue == null) glue = NULL_VALUE;
+        if (pieces == null) pieces = NULL_VALUE;
+
+        String sep = glue.isNull() ? "" : glue.toPhpString();
+        if (sep == null) sep = "";
+
+        if (pieces.isNull()) return of("");
+
+        if (!pieces.isArray()) {
+            // pragmatic fallback
+            return of(pieces.toPhpString());
+        }
+
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<PhpKey, BasePhpValue> e : pieces.asArray().map.entrySet()) {
+            if (!first) sb.append(sep);
+            first = false;
+
+            BasePhpValue pv = deref(e.getValue());
+            if (pv == null) pv = NULL_VALUE;
+            sb.append(pv.toPhpString());
+        }
+        return of(sb.toString());
+    }
+
     // ---------- Debug / printing ----------
     @Override
     public String toString() {
