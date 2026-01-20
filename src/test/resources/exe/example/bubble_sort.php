@@ -1,11 +1,11 @@
 <?php
 // Чтение размера массива
-$n = (int)trim(fgets(STDIN));
+$n = fgets(STDIN);
 
 // Чтение элементов массива
 $array = [];
 for ($i = 0; $i < $n; $i++) {
-    $array[] = (int)trim(fgets(STDIN));
+    $array[] = trim(fgets(STDIN));
 }
 
 echo "Исходный массив: " . implode(' ', $array) . "\n";
