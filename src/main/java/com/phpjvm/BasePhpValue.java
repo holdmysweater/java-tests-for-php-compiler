@@ -1,5 +1,6 @@
 package com.phpjvm;
 
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -971,6 +972,107 @@ public final class BasePhpValue {
             sb.append(pv.toPhpString());
         }
         return of(sb.toString());
+    }
+
+    public static BasePhpValue print_r(BasePhpValue value) {
+        return print_r(value, BasePhpValue.of(false));
+    }
+
+    // PHP: print_r($value, $return = false)
+    public static BasePhpValue print_r(BasePhpValue value, BasePhpValue returnFlag) {
+        value = deref(value);
+        returnFlag = deref(returnFlag);
+        if (value == null) value = NULL_VALUE;
+        if (returnFlag == null) returnFlag = NULL_VALUE;
+
+        StringBuilder sb = new StringBuilder();
+        IdentityHashMap<Object, Boolean> seen = new IdentityHashMap<>();
+        printRBuild(value, sb, 0, seen);
+
+        String out = sb.toString();
+
+        if (returnFlag.toBool()) {
+            return of(out);
+        }
+
+        System.out.print(out);
+        return of(true);
+    }
+
+    private static void printRIndent(StringBuilder sb, int indent) {
+        for (int i = 0; i < indent; i++) sb.append(' ');
+    }
+
+    private static void printRBuild(BasePhpValue v, StringBuilder sb, int indent, IdentityHashMap<Object, Boolean> seen) {
+        v = deref(v);
+        if (v == null) v = NULL_VALUE;
+
+        if (v.isArray()) {
+            Object id = v.value; // underlying ArrayData identity
+            if (seen.put(id, Boolean.TRUE) != null) {
+                sb.append("*RECURSION*");
+                return;
+            }
+
+            sb.append("Array\n");
+            printRIndent(sb, indent);
+            sb.append("(\n");
+
+            for (Map.Entry<PhpKey, BasePhpValue> e : v.asArray().map.entrySet()) {
+                printRIndent(sb, indent + 4);
+                sb.append('[').append(e.getKey().toString()).append("] => ");
+
+                BasePhpValue child = deref(e.getValue());
+                if (child != null && (child.isArray() || child.isObject())) {
+                    sb.append('\n');
+                    printRIndent(sb, indent + 8);
+                    printRBuild(child, sb, indent + 8, seen);
+                    sb.append('\n');
+                } else {
+                    sb.append(child == null ? "" : child.toPhpString());
+                    sb.append('\n');
+                }
+            }
+
+            printRIndent(sb, indent);
+            sb.append(")");
+            return;
+        }
+
+        if (v.isObject()) {
+            PhpObject obj = v.asObject();
+            Object id = obj;
+            if (seen.put(id, Boolean.TRUE) != null) {
+                sb.append("*RECURSION*");
+                return;
+            }
+
+            sb.append(obj.getPhpClass().getName()).append(" Object\n");
+            printRIndent(sb, indent);
+            sb.append("(\n");
+
+            for (var e : obj.debugPropertiesView().entrySet()) {
+                printRIndent(sb, indent + 4);
+                sb.append('[').append(e.getKey()).append("] => ");
+                BasePhpValue pv = deref(e.getValue());
+                if (pv != null && (pv.isArray() || pv.isObject())) {
+                    sb.append('\n');
+                    printRIndent(sb, indent + 8);
+                    printRBuild(pv, sb, indent + 8, seen);
+                    sb.append('\n');
+                } else {
+                    sb.append(pv == null ? "" : pv.toPhpString());
+                    sb.append('\n');
+                }
+            }
+
+            printRIndent(sb, indent);
+            sb.append(")");
+            return;
+        }
+
+        // scalars/null: match your existing echo semantics
+        sb.append(v.toPhpString());
     }
 
     // ---------- Debug / printing ----------
