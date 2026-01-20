@@ -450,4 +450,54 @@ public final class PhpRuntime {
         }
         throw new NoSuchMethodException(name);
     }
+
+    public static BasePhpValue callParent(PhpObject obj, String currentClassName, String methodName, BasePhpValue[] args) {
+        if (obj == null) throw new BasePhpValue.PhpRuntimeException("Call to a member function on null");
+        if (currentClassName == null) currentClassName = "";
+        if (methodName == null) methodName = "";
+        if (args == null) args = new BasePhpValue[0];
+
+        PhpClass cur = requireClass(currentClassName);
+        PhpClass parent = cur.getParent();
+        if (parent == null) {
+            throw new BasePhpValue.PhpRuntimeException("Cannot access parent:: when current class has no parent");
+        }
+
+        PhpMethod m = parent.findMethod(methodName);
+        if (m != null) {
+            BasePhpValue r = m.invoke(obj, args);
+            return (r == null) ? BasePhpValue.NULL_VALUE : r;
+        }
+
+        String mn = norm(methodName);
+        Class<?> host = jvmClassFromPhpName(parent.getName());
+
+        try {
+            Method javaM = findDeclaredMethodInHierarchy(host, mn, PhpObject.class, BasePhpValue[].class);
+            Object out = javaM.invoke(null, obj, args);
+            return (out instanceof BasePhpValue pv) ? pv : BasePhpValue.NULL_VALUE;
+        } catch (NoSuchMethodException e) {
+            throw new BasePhpValue.PhpRuntimeException(
+                    "Call to undefined method " + parent.getName() + "::" + methodName + "()"
+            );
+        } catch (Exception e) {
+            throw new BasePhpValue.PhpRuntimeException(
+                    "Exception in method " + parent.getName() + "::" + methodName + "(): " + e.getMessage()
+            );
+        }
+    }
+
+    public static BasePhpValue callParentStatic(String currentClassName, String methodName, BasePhpValue[] args) {
+        if (currentClassName == null) currentClassName = "";
+        if (methodName == null) methodName = "";
+        if (args == null) args = new BasePhpValue[0];
+
+        PhpClass cur = requireClass(currentClassName);
+        PhpClass parent = cur.getParent();
+        if (parent == null) {
+            throw new BasePhpValue.PhpRuntimeException("Cannot access parent:: when current class has no parent");
+        }
+
+        return callStatic(parent, methodName, args);
+    }
 }
