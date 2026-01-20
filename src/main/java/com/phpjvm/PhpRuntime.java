@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -298,10 +299,15 @@ public final class PhpRuntime {
     }
 
     public static BasePhpValue callMethod(PhpObject obj, String methodName, BasePhpValue[] args) {
+        return callMethodCtx(obj, methodName, args, "");
+    }
+
+    public static BasePhpValue callMethodCtx(PhpObject obj, String methodName, BasePhpValue[] args, String callerClassName) {
         if (obj == null) throw new BasePhpValue.PhpRuntimeException("Call to a member function on null");
         if (methodName == null) methodName = "";
         if (args == null) args = new BasePhpValue[0];
 
+        // If later you register PhpMethod objects, enforce visibility there too.
         PhpMethod m = obj.getPhpClass().findMethod(methodName);
         if (m != null) {
             BasePhpValue r = m.invoke(obj, args);
@@ -313,6 +319,11 @@ public final class PhpRuntime {
 
         try {
             Method javaM = findDeclaredMethodInHierarchy(host, mn, PhpObject.class, BasePhpValue[].class);
+
+            // NEW: PHP visibility check BEFORE reflective invoke
+            assertPhpMethodVisibility(javaM, callerClassName, methodName);
+
+            javaM.setAccessible(true);
             Object out = javaM.invoke(null, obj, args);
             return (out instanceof BasePhpValue pv) ? pv : BasePhpValue.NULL_VALUE;
         } catch (NoSuchMethodException e) {
@@ -327,6 +338,10 @@ public final class PhpRuntime {
     }
 
     public static BasePhpValue callStatic(PhpClass calledClass, String methodName, BasePhpValue[] args) {
+        return callStaticCtx(calledClass, methodName, args, "");
+    }
+
+    public static BasePhpValue callStaticCtx(PhpClass calledClass, String methodName, BasePhpValue[] args, String callerClassName) {
         if (calledClass == null) throw new BasePhpValue.PhpRuntimeException("Static call on null class");
         if (methodName == null) methodName = "";
         if (args == null) args = new BasePhpValue[0];
@@ -342,6 +357,11 @@ public final class PhpRuntime {
 
         try {
             Method javaM = findDeclaredMethodInHierarchy(host, mn, PhpClass.class, BasePhpValue[].class);
+
+            // NEW: PHP visibility check for static methods too
+            assertPhpMethodVisibility(javaM, callerClassName, methodName);
+
+            javaM.setAccessible(true);
             Object out = javaM.invoke(null, calledClass, args);
             return (out instanceof BasePhpValue pv) ? pv : BasePhpValue.NULL_VALUE;
         } catch (NoSuchMethodException e) {
@@ -441,9 +461,7 @@ public final class PhpRuntime {
         Class<?> c = start;
         while (c != null) {
             try {
-                Method m = c.getDeclaredMethod(name, params);
-                m.setAccessible(true);
-                return m;
+                return c.getDeclaredMethod(name, params);
             } catch (NoSuchMethodException ignored) {
                 c = c.getSuperclass();
             }
@@ -474,6 +492,8 @@ public final class PhpRuntime {
 
         try {
             Method javaM = findDeclaredMethodInHierarchy(host, mn, PhpObject.class, BasePhpValue[].class);
+            assertPhpMethodVisibility(javaM, currentClassName, methodName);
+            javaM.setAccessible(true);
             Object out = javaM.invoke(null, obj, args);
             return (out instanceof BasePhpValue pv) ? pv : BasePhpValue.NULL_VALUE;
         } catch (NoSuchMethodException e) {
@@ -498,6 +518,73 @@ public final class PhpRuntime {
             throw new BasePhpValue.PhpRuntimeException("Cannot access parent:: when current class has no parent");
         }
 
-        return callStatic(parent, methodName, args);
+        return callStaticCtx(parent, methodName, args, currentClassName);
+    }
+
+    private static String normClassCtx(String callerClassName) {
+        if (callerClassName == null) return "";
+        String s = callerClassName.trim();
+        if (s.isEmpty()) return "";
+        return norm(s);
+    }
+
+    private static void denyPrivate(String decl, String method, String callerCtx) {
+        throw new BasePhpValue.PhpRuntimeException(
+                "Call to private method " + decl + "::" + method + "() from context '" + callerCtx + "'"
+        );
+    }
+
+    private static void denyProtected(String decl, String method, String callerCtx) {
+        throw new BasePhpValue.PhpRuntimeException(
+                "Call to protected method " + decl + "::" + method + "() from context '" + callerCtx + "'"
+        );
+    }
+
+    private static void assertPhpMethodVisibility(Method target, String callerClassName, String invokedName) {
+        if (target == null) return;
+
+        int mod = target.getModifiers();
+        if (Modifier.isPublic(mod)) return;
+
+        // For now, treat package-private as public (PHP has no package visibility)
+        boolean isPriv = Modifier.isPrivate(mod);
+        boolean isProt = Modifier.isProtected(mod);
+
+        String callerCtx = normClassCtx(callerClassName);
+        String decl = norm(target.getDeclaringClass().getName());
+
+        if (isPriv) {
+            if (callerCtx.isEmpty()) {
+                denyPrivate(decl, invokedName, "");
+            }
+            Class<?> caller;
+            try {
+                caller = jvmClassFromPhpName(callerCtx);
+            } catch (BasePhpValue.PhpRuntimeException ex) {
+                denyPrivate(decl, invokedName, callerCtx);
+                return;
+            }
+            if (caller != target.getDeclaringClass()) {
+                denyPrivate(decl, invokedName, callerCtx);
+            }
+            return;
+        }
+
+        if (isProt) {
+            if (callerCtx.isEmpty()) {
+                denyProtected(decl, invokedName, "");
+            }
+            Class<?> caller;
+            try {
+                caller = jvmClassFromPhpName(callerCtx);
+            } catch (BasePhpValue.PhpRuntimeException ex) {
+                denyProtected(decl, invokedName, callerCtx);
+                return;
+            }
+            // Allow if caller is declaring class or subclass
+            if (!target.getDeclaringClass().isAssignableFrom(caller)) {
+                denyProtected(decl, invokedName, callerCtx);
+            }
+        }
     }
 }
