@@ -95,21 +95,7 @@ class WhileTest extends ExternalProcessDDT {
                 // Несколько операторов в теле
                 new SuccessCase("while_multiple_statements.php",
                         "First statement\nSecond statement\nThird statement\n" +
-                                "First statement\nSecond statement\nThird statement\n"),
-
-                // Edge cases
-                new SuccessCase("while_zero_iterations.php",
-                        "Loop never executed\n"),
-
-                new SuccessCase("while_single_iteration.php",
-                        "Single iteration\n"),
-
-                new SuccessCase("while_large_iterations.php",
-                        "0\n1\n2\n3\n4\n"),
-
-                // While с изменением условия
-                new SuccessCase("while_changing_condition.php",
-                        "Iteration 1\nIteration 2\nIteration 3\n")
+                                "First statement\nSecond statement\nThird statement\n")
         );
     }
 

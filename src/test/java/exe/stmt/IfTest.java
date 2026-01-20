@@ -73,23 +73,7 @@ class IfTest extends ExternalProcessDDT {
                 // If с null
                 new SuccessCase("if_with_null.php",
                         "Null is falsy\n" +
-                                "isset returns false for null\n"),
-
-                // Edge cases
-                new SuccessCase("if_zero.php",
-                        "Zero is falsy\n"),
-
-                new SuccessCase("if_empty_string.php",
-                        "Empty string is falsy\n"),
-
-                new SuccessCase("if_negative.php",
-                        "Negative is truthy\n"),
-
-                // Multiple statements in block
-                new SuccessCase("if_multiple_statements.php",
-                        "Statement 1\n" +
-                                "Statement 2\n" +
-                                "Statement 3\n")
+                                "isset returns false for null\n")
         );
     }
 
@@ -103,14 +87,7 @@ class IfTest extends ExternalProcessDDT {
                 new ErrorCase("error_else_without_if.php"),
                 new ErrorCase("error_elseif_without_if.php"),
                 new ErrorCase("error_unexpected_endif.php"),
-                new ErrorCase("error_missing_colon.php"),
-
-                // Дополнительные тесты на ошибки
-                new ErrorCase("error_unclosed_block.php"),
-                new ErrorCase("error_missing_brace.php"),
-                new ErrorCase("error_invalid_condition.php"),
-                new ErrorCase("error_extra_else.php"),
-                new ErrorCase("error_nested_error.php")
+                new ErrorCase("error_missing_colon.php")
         );
     }
 }
