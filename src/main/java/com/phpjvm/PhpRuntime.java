@@ -317,7 +317,12 @@ public final class PhpRuntime {
         }
 
         String mn = norm(methodName);
-        Class<?> host = jvmClassFromPhpName(obj.getPhpClass().getName());
+        Class<?> host = tryJvmClassFromPhpName(obj.getPhpClass().getName());
+        if (host == null) {
+            throw new BasePhpValue.PhpRuntimeException(
+                    "Call to undefined method " + obj.getPhpClass().getName() + "::" + methodName + "()"
+            );
+        }
 
         try {
             Method javaM = findDeclaredMethodInHierarchy(host, mn, PhpObject.class, BasePhpValue[].class);
@@ -355,7 +360,12 @@ public final class PhpRuntime {
         }
 
         String mn = norm(methodName);
-        Class<?> host = jvmClassFromPhpName(calledClass.getName());
+        Class<?> host = tryJvmClassFromPhpName(calledClass.getName());
+        if (host == null) {
+            throw new BasePhpValue.PhpRuntimeException(
+                    "Call to undefined method " + calledClass.getName() + "::" + methodName + "()"
+            );
+        }
 
         try {
             Method javaM = findDeclaredMethodInHierarchy(host, mn, PhpClass.class, BasePhpValue[].class);
@@ -405,10 +415,12 @@ public final class PhpRuntime {
             return BasePhpValue.NULL_VALUE;
         };
         PhpMethod getMessage = (self, args) -> self.getProperty("message");
+        PhpMethod destruct = (self, args) -> BasePhpValue.NULL_VALUE;
 
         for (PhpClass c : List.of(throwable, exception, runtimeEx, logicEx)) {
             c.addMethod("__construct", ctor);
             c.addMethod("getMessage", getMessage);
+            c.addMethod("__destruct", destruct);
         }
     }
 
@@ -489,9 +501,12 @@ public final class PhpRuntime {
         PhpClass parent = null;
         String pn = norm(parentName);
         if (!pn.isEmpty()) {
-            // Force-load parent JVM class so its <clinit> can register it
-            jvmClassFromPhpName(pn);
-
+            if (!CLASSES.containsKey(pn)) {
+                try {
+                    jvmClassFromPhpName(pn);
+                } catch (Throwable ignored) {
+                }
+            }
             parent = CLASSES.get(pn);
             if (parent == null) {
                 throw new BasePhpValue.PhpRuntimeException("Class not found: " + parentName);
@@ -938,4 +953,14 @@ public final class PhpRuntime {
         }
         return false;
     }
+
+    private static Class<?> tryJvmClassFromPhpName(String phpClassName) {
+        String n = norm(phpClassName).replace('/', '.');
+        try {
+            return Class.forName(n);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
+
 }
