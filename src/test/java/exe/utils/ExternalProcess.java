@@ -12,6 +12,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public abstract class ExternalProcess {
 
     // ---- configuration ----
@@ -137,13 +139,13 @@ public abstract class ExternalProcess {
 
         Result result = compileAndRun(phpFile, null);
 
-        Assertions.assertEquals(
+        assertEquals(
                 0,
                 result.exitCode,
                 "\nExpected exit code 0\nOutput:\n" + result.output
         );
 
-        Assertions.assertEquals(
+        assertEquals(
                 normalize(expectedOutput),
                 normalize(result.output),
                 "Output mismatch"
@@ -158,13 +160,13 @@ public abstract class ExternalProcess {
 
         Result result = compileAndRun(phpFile, stdin);
 
-        Assertions.assertEquals(
+        assertEquals(
                 0,
                 result.exitCode,
                 "\nExpected exit code 0\nOutput:\n" + result.output
         );
 
-        Assertions.assertEquals(
+        assertEquals(
                 normalize(expectedOutput),
                 normalize(result.output),
                 "\nOutput mismatch"

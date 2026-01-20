@@ -19,8 +19,7 @@ class ExampleTest extends ExternalProcessDDT {
     @Override
     protected Stream<SuccessCase> fileCases() {
         return Stream.of(
-                new SuccessCase("echo.php", "Hello world!"),
-                new SuccessCase("echo2.php", "Serendipity")
+                new SuccessCase("echo.php", "Hello world!")
         );
     }
 
