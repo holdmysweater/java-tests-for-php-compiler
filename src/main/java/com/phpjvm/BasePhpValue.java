@@ -1075,6 +1075,76 @@ public final class BasePhpValue {
         sb.append(v.toPhpString());
     }
 
+    // ============================================================
+// Foreach support
+// ============================================================
+
+    public static ForeachIter foreachIter(BasePhpValue v) {
+        v = deref(v);
+        if (v == null || v.isNull()) {
+            return new ForeachIter(new PhpKey[0], new BasePhpValue[0]);
+        }
+        if (!v.isArray()) {
+            throw new PhpRuntimeException("Invalid argument supplied for foreach()");
+        }
+
+        PhpArray a = v.asArray();
+        int n = a.map.size();
+
+        PhpKey[] keys = new PhpKey[n];
+        BasePhpValue[] vals = new BasePhpValue[n];
+
+        int i = 0;
+        for (Map.Entry<PhpKey, BasePhpValue> e : a.map.entrySet()) {
+            keys[i] = e.getKey();
+            vals[i] = (e.getValue() == null) ? NULL_VALUE : e.getValue();
+            i++;
+        }
+
+        return new ForeachIter(keys, vals);
+    }
+
+    public static final class ForeachIter {
+        private final PhpKey[] keys;
+        private final BasePhpValue[] values;
+
+        private int idx = -1;
+        private PhpKey curK;
+        private BasePhpValue curV;
+
+        private ForeachIter(PhpKey[] keys, BasePhpValue[] values) {
+            this.keys = keys;
+            this.values = values;
+        }
+
+        /**
+         * Move to next element. Returns false when iteration ends.
+         */
+        public boolean advance() {
+            int ni = idx + 1;
+            if (ni >= values.length) return false;
+            idx = ni;
+            curK = keys[idx];
+            curV = values[idx];
+            return true;
+        }
+
+        /**
+         * Current key as BasePhpValue (valid after advance() == true).
+         */
+        public BasePhpValue key() {
+            if (curK == null) return NULL_VALUE;
+            return (curK.kind == PhpKey.K.INT) ? of(curK.intKey) : of(curK.strKey);
+        }
+
+        /**
+         * Current value as BasePhpValue (valid after advance() == true).
+         */
+        public BasePhpValue value() {
+            return (curV == null) ? NULL_VALUE : curV;
+        }
+    }
+
     // ---------- Debug / printing ----------
     @Override
     public String toString() {
