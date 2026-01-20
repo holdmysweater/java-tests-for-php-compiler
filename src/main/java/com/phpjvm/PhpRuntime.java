@@ -587,4 +587,230 @@ public final class PhpRuntime {
             }
         }
     }
+
+    // -------------------------------------------------------------------------
+    // Declared properties + constants (with PHP-ish visibility checks)
+    // -------------------------------------------------------------------------
+
+    private static PhpClass.Visibility visFromInt(int v) {
+        return switch (v) {
+            case 2 -> PhpClass.Visibility.PROTECTED;
+            case 3 -> PhpClass.Visibility.PRIVATE;
+            default -> PhpClass.Visibility.PUBLIC;
+        };
+    }
+
+    private static boolean isSameOrSubclass(PhpClass maybeChild, PhpClass maybeParent) {
+        if (maybeChild == null || maybeParent == null) return false;
+        PhpClass c = maybeChild;
+        while (c != null) {
+            if (c == maybeParent) return true;
+            c = c.getParent();
+        }
+        return false;
+    }
+
+    private static PhpClass callerClassFromCtx(String callerClassName) {
+        String ctx = normClassCtx(callerClassName);
+        if (ctx.isEmpty()) return null;
+        return CLASSES.get(ctx);
+    }
+
+    private static void denyMember(String kind, String declClass, String member, String callerCtx) {
+        String ctx = (callerCtx == null) ? "" : callerCtx;
+        throw new BasePhpValue.PhpRuntimeException(
+                "Cannot access " + kind + " " + declClass + "::" + member + " from context '" + ctx + "'"
+        );
+    }
+
+    private static void assertPhpMemberVisibility(
+            PhpClass declaringClass,
+            PhpClass.Visibility vis,
+            String callerClassName,
+            String kindForMsg,
+            String memberForMsg
+    ) {
+        if (vis == PhpClass.Visibility.PUBLIC) return;
+
+        PhpClass caller = callerClassFromCtx(callerClassName);
+        if (caller == null) {
+            denyMember(vis == PhpClass.Visibility.PRIVATE ? "private " + kindForMsg : "protected " + kindForMsg,
+                    declaringClass.getName(), memberForMsg, normClassCtx(callerClassName));
+            return;
+        }
+
+        if (vis == PhpClass.Visibility.PRIVATE) {
+            if (caller != declaringClass) {
+                denyMember("private " + kindForMsg, declaringClass.getName(), memberForMsg, caller.getName());
+            }
+            return;
+        }
+
+        // PROTECTED
+        if (!isSameOrSubclass(caller, declaringClass)) {
+            denyMember("protected " + kindForMsg, declaringClass.getName(), memberForMsg, caller.getName());
+        }
+    }
+
+    public static void defineProperty(String className, String propName, boolean isStatic, int visibility, BasePhpValue defaultValue) {
+        String cn = norm(className);
+        if (cn.isEmpty()) throw new BasePhpValue.PhpRuntimeException("Invalid class name");
+
+        // Ensure class exists
+        PhpClass c = requireClass(cn);
+
+        PhpClass.Visibility vis = visFromInt(visibility);
+        c.declareProperty(propName, isStatic, vis, defaultValue);
+    }
+
+    public static void defineConst(String className, String constName, int visibility, BasePhpValue value) {
+        String cn = norm(className);
+        if (cn.isEmpty()) throw new BasePhpValue.PhpRuntimeException("Invalid class name");
+
+        PhpClass c = requireClass(cn);
+        PhpClass.Visibility vis = visFromInt(visibility);
+        c.defineConst(constName, vis, value);
+    }
+
+    private static final class PropLookup {
+        final PhpClass declClass;
+        final PhpClass.DeclaredProperty prop;
+
+        PropLookup(PhpClass declClass, PhpClass.DeclaredProperty prop) {
+            this.declClass = declClass;
+            this.prop = prop;
+        }
+    }
+
+    private static final class ConstLookup {
+        final PhpClass declClass;
+        final PhpClass.DeclaredConst c;
+
+        ConstLookup(PhpClass declClass, PhpClass.DeclaredConst c) {
+            this.declClass = declClass;
+            this.c = c;
+        }
+    }
+
+    private static PropLookup findStaticProp(PhpClass start, String propName) {
+        PhpClass cur = start;
+        while (cur != null) {
+            PhpClass.DeclaredProperty p = cur.getDeclaredPropertyHere(propName);
+            if (p != null && p.isStatic) return new PropLookup(cur, p);
+            cur = cur.getParent();
+        }
+        return null;
+    }
+
+    private static PropLookup findInstanceProp(PhpClass start, String propName) {
+        PhpClass cur = start;
+        while (cur != null) {
+            PhpClass.DeclaredProperty p = cur.getDeclaredPropertyHere(propName);
+            if (p != null && !p.isStatic) return new PropLookup(cur, p);
+            cur = cur.getParent();
+        }
+        return null;
+    }
+
+    private static ConstLookup findConst(PhpClass start, String constName) {
+        PhpClass cur = start;
+        while (cur != null) {
+            PhpClass.DeclaredConst c = cur.getDeclaredConstHere(constName);
+            if (c != null) return new ConstLookup(cur, c);
+            cur = cur.getParent();
+        }
+        return null;
+    }
+
+    public static BasePhpValue getStaticPropCtx(PhpClass calledClass, String propName, String callerClassName) {
+        if (calledClass == null) throw new BasePhpValue.PhpRuntimeException("Static access on null class");
+        if (propName == null) propName = "";
+
+        PropLookup hit = findStaticProp(calledClass, propName);
+        if (hit == null) {
+            throw new BasePhpValue.PhpRuntimeException("Access to undeclared static property " + calledClass.getName() + "::$" + propName);
+        }
+
+        assertPhpMemberVisibility(hit.declClass, hit.prop.visibility, callerClassName, "property", "$" + propName);
+        return hit.declClass.getStaticPropValueHere(propName);
+    }
+
+    public static BasePhpValue setStaticPropCtx(PhpClass calledClass, String propName, BasePhpValue value, String callerClassName) {
+        if (calledClass == null) throw new BasePhpValue.PhpRuntimeException("Static access on null class");
+        if (propName == null) propName = "";
+
+        PropLookup hit = findStaticProp(calledClass, propName);
+        if (hit == null) {
+            throw new BasePhpValue.PhpRuntimeException("Access to undeclared static property " + calledClass.getName() + "::$" + propName);
+        }
+
+        assertPhpMemberVisibility(hit.declClass, hit.prop.visibility, callerClassName, "property", "$" + propName);
+        BasePhpValue v = (value == null) ? BasePhpValue.NULL_VALUE : value;
+        hit.declClass.setStaticPropValueHere(propName, v);
+        return v;
+    }
+
+    public static BasePhpValue getConstCtx(PhpClass calledClass, String constName, String callerClassName) {
+        if (calledClass == null) throw new BasePhpValue.PhpRuntimeException("Const access on null class");
+        if (constName == null) constName = "";
+
+        ConstLookup hit = findConst(calledClass, constName);
+        if (hit == null) {
+            throw new BasePhpValue.PhpRuntimeException("Undefined class constant " + calledClass.getName() + "::" + constName);
+        }
+
+        assertPhpMemberVisibility(hit.declClass, hit.c.visibility, callerClassName, "constant", constName);
+        return (hit.c.value == null) ? BasePhpValue.NULL_VALUE : hit.c.value;
+    }
+
+    public static BasePhpValue getParentStaticPropCtx(String currentClassName, String propName, String callerClassName) {
+        if (currentClassName == null) currentClassName = "";
+        PhpClass cur = requireClass(currentClassName);
+        PhpClass parent = cur.getParent();
+        if (parent == null) throw new BasePhpValue.PhpRuntimeException("Cannot access parent:: when current class has no parent");
+        return getStaticPropCtx(parent, propName, callerClassName);
+    }
+
+    public static BasePhpValue setParentStaticPropCtx(String currentClassName, String propName, BasePhpValue value, String callerClassName) {
+        if (currentClassName == null) currentClassName = "";
+        PhpClass cur = requireClass(currentClassName);
+        PhpClass parent = cur.getParent();
+        if (parent == null) throw new BasePhpValue.PhpRuntimeException("Cannot access parent:: when current class has no parent");
+        return setStaticPropCtx(parent, propName, value, callerClassName);
+    }
+
+    public static BasePhpValue getParentConstCtx(String currentClassName, String constName, String callerClassName) {
+        if (currentClassName == null) currentClassName = "";
+        PhpClass cur = requireClass(currentClassName);
+        PhpClass parent = cur.getParent();
+        if (parent == null) throw new BasePhpValue.PhpRuntimeException("Cannot access parent:: when current class has no parent");
+        return getConstCtx(parent, constName, callerClassName);
+    }
+
+    public static BasePhpValue getPropCtx(PhpObject obj, String propName, String callerClassName) {
+        if (obj == null) throw new BasePhpValue.PhpRuntimeException("Access to property on null");
+        if (propName == null) propName = "";
+
+        // If declared, enforce visibility; else treat as dynamic public property
+        PropLookup hit = findInstanceProp(obj.getPhpClass(), propName);
+        if (hit != null) {
+            assertPhpMemberVisibility(hit.declClass, hit.prop.visibility, callerClassName, "property", "$" + propName);
+        }
+
+        return obj.getProperty(propName);
+    }
+
+    public static BasePhpValue setPropCtx(PhpObject obj, String propName, BasePhpValue value, String callerClassName) {
+        if (obj == null) throw new BasePhpValue.PhpRuntimeException("Access to property on null");
+        if (propName == null) propName = "";
+
+        PropLookup hit = findInstanceProp(obj.getPhpClass(), propName);
+        if (hit != null) {
+            assertPhpMemberVisibility(hit.declClass, hit.prop.visibility, callerClassName, "property", "$" + propName);
+        }
+
+        BasePhpValue v = (value == null) ? BasePhpValue.NULL_VALUE : value;
+        obj.setProperty(propName, v);
+        return v;
+    }
 }
