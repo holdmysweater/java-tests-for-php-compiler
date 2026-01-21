@@ -339,6 +339,14 @@ public final class PhpRuntime {
             throw new BasePhpValue.PhpRuntimeException(
                     "Call to undefined method " + obj.getPhpClass().getName() + "::" + methodName + "()"
             );
+        } catch (java.lang.reflect.InvocationTargetException ite) {
+            Throwable cause = ite.getCause();
+            if (cause instanceof RuntimeException re) throw re;
+            throw new BasePhpValue.PhpRuntimeException(
+                    "Exception in method " + obj.getPhpClass().getName() + "::" + methodName + "(): " +
+                            (cause == null ? "null" : cause.getMessage()),
+                    cause
+            );
         } catch (Exception e) {
             throw new BasePhpValue.PhpRuntimeException(
                     "Exception in method " + obj.getPhpClass().getName() + "::" + methodName + "(): " + e.getMessage()
@@ -969,6 +977,20 @@ public final class PhpRuntime {
         // If you want PHP-like behavior instead:
         System.err.println("Notice: Undefined variable: " + name);
         return BasePhpValue.NULL_VALUE;
+    }
+
+    public static void assertArgCount(BasePhpValue[] args, int required, int total, String fnName) {
+        int passed = (args == null) ? 0 : args.length;
+        if (passed < required) {
+            String expected = (required == total)
+                    ? ("exactly " + total)
+                    : ("at least " + required);
+
+            if (fnName == null) fnName = "";
+            throw new BasePhpValue.PhpRuntimeException(
+                    "Too few arguments to function " + fnName + "(), " + passed + " passed and " + expected + " expected"
+            );
+        }
     }
 
 }
