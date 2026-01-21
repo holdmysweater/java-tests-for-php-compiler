@@ -473,10 +473,44 @@ public final class PhpRuntime {
         return switch (n) {
             case "fgets" -> builtinFgets();
             case "fgetc" -> builtinFgetc();
+            case "implode", "join" -> builtinImplode(args);
+
             default -> throw new BasePhpValue.PhpRuntimeException(
                     "Call to undefined function " + name + "()"
             );
         };
+    }
+
+    private static BasePhpValue builtinImplode(BasePhpValue[] args) {
+        if (args == null) args = new BasePhpValue[0];
+
+        BasePhpValue glue;
+        BasePhpValue pieces;
+
+        if (args.length == 0) {
+            glue = BasePhpValue.of("");
+            pieces = BasePhpValue.NULL_VALUE;
+        } else if (args.length == 1) {
+            glue = BasePhpValue.of(" ");
+            pieces = (args[0] == null) ? BasePhpValue.NULL_VALUE : args[0];
+        } else {
+            BasePhpValue a0 = (args[0] == null) ? BasePhpValue.NULL_VALUE : args[0];
+            BasePhpValue a1 = (args[1] == null) ? BasePhpValue.NULL_VALUE : args[1];
+
+            String t0 = typeOf(a0);
+            String t1 = typeOf(a1);
+
+            if ("array".equals(t0) && "string".equals(t1)) {
+                pieces = a0;
+                glue = a1;
+            } else {
+                glue = a0;
+                pieces = a1;
+            }
+        }
+
+        BasePhpValue out = BasePhpValue.implode(glue, pieces);
+        return (out == null) ? BasePhpValue.NULL_VALUE : out;
     }
 
     private static BasePhpValue builtinFgets() {
