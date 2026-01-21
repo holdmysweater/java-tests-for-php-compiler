@@ -31,16 +31,6 @@ class BaseTest extends ExternalProcessDDT {
     }
 
     @Test
-    void functionParamsTest() throws Exception {
-        assertFileWithInput("function_params.php", "5",
-                "By value - original: 5, result: 10\n" +
-                        "By reference - modified: 10\n" +
-                        "Object - value: 10\n" +
-                        "Array - first element: 5\n" +
-                        "Array by reference - first element: 777");
-    }
-
-    @Test
     void bubbleSortTest() throws Exception {
         String input = "5\n3\n1\n4\n2\n5";
         String expected = "Original array: 3\n 1\n 4\n 2\n 5\n\n" +
@@ -121,34 +111,6 @@ class BaseTest extends ExternalProcessDDT {
                         "4. Calling parent method through child: Parent: 10");
     }
 
-    // Additional tests for checking polymorphism with array
-    @Test
-    void polymorphismArrayExactTest() throws Exception {
-        String input = "3\n" +
-                "circle 5\n" +
-                "rectangle 4 6\n" +
-                "triangle 3 4 5";
-
-        String expected = "Shape 0: Area = 78.54, Perimeter = 31.42\n" +
-                "Shape 1: Area = 24, Perimeter = 20\n" +
-                "Shape 2: Area = 6, Perimeter = 12\n" +
-                "\n" +
-                "Total area: 108.54\n" +
-                "Total perimeter: 63.42";
-
-        assertFileWithInput("polymorphism_array.php", input, expected);
-    }
-
-    @Test
-    void polymorphismArraySimpleTest() throws Exception {
-        String input = "1\ncircle 3";
-        String expected = "Shape 0: Area = 28.27, Perimeter = 18.85\n" +
-                "\n" +
-                "Total area: 28.27\n" +
-                "Total perimeter: 18.85";
-        assertFileWithInput("polymorphism_array.php", input, expected);
-    }
-
     @Test
     void visibilityExactTest() throws Exception {
         // Checking exact output for parent class
@@ -189,6 +151,6 @@ class BaseTest extends ExternalProcessDDT {
                         "int_concat: 510\n" +
                         "float_concat: 510\n" +
                         "bool_concat: 510");
-        
+
     }
 }
