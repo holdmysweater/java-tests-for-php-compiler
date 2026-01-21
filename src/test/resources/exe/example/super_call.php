@@ -16,7 +16,7 @@ class ParentClass
 
     public function getInfo()
     {
-        return "Родитель: " . $this->value;
+        return "Parent: " . $this->value;
     }
 }
 
@@ -42,7 +42,7 @@ class ChildClass extends ParentClass
     public function getFullInfo()
     {
         $parentInfo = parent::getInfo();
-        return $parentInfo . ", Дочерний: " . $this->extra;
+        return $parentInfo . "Child: " . $this->extra;
     }
 
     // Метод без super вызова
@@ -53,13 +53,13 @@ class ChildClass extends ParentClass
 }
 
 // Чтение ввода
-$input = fgets(STDIN);
-list($value, $extra) = explode(' ', $input);
+$value = fgets(STDIN);
+$extra = fgets(STDIN);
 
-$child = new ChildClass((int)$value, (int)$extra);
+$child = new ChildClass($value, $extra);
 
-echo "1. calculate() с super: " . $child->calculate() . "\n";
-echo "2. getFullInfo() с super: " . $child->getFullInfo() . "\n";
-echo "3. calculateDirectly() без super: " . $child->calculateDirectly() . "\n";
-echo "4. Вызов родительского метода через child: " . $child->getInfo();
+echo "1. calculate() with super: " . $child->calculate() . "\n";
+echo "2. getFullInfo() with super: " . $child->getFullInfo() . "\n";
+echo "3. calculateDirectly() without super: " . $child->calculateDirectly() . "\n";
+echo "4. Calling parent method through child: " . $child->getInfo();
 ?>

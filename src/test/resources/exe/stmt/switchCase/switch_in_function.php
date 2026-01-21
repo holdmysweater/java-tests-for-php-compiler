@@ -1,6 +1,7 @@
 <?php
-function getGrade($score) {
-    switch ($score) {
+function getGrade($score)
+{
+    switch (true) {
         case ($score >= 90):
             return "Grade: A";
         case ($score >= 80):

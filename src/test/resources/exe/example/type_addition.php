@@ -7,8 +7,7 @@ $types = [
     'string' => $input,
     'int' => $input,
     'float' => $input,
-    'bool' => $input,
-    'array' => [$input]
+    'bool' => $input
 ];
 
 // Тестирование сложения

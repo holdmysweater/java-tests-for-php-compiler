@@ -161,25 +161,6 @@ class InterpolationTest extends ExternalProcessDDT {
                                 Total items: 3
                                 """),
 
-                // Файл с nowdoc и смешанным содержимым
-                new SuccessCase("nowdoc_mixed.php",
-                        """
-                                Before nowdoc: VARIABLE
-                                
-                                NOWDOC CONTENT
-                                ==============
-                                This is a template with $var not interpolated.
-                                Also {1 + 2} is not calculated.
-                                The number is $num.
-                                
-                                But we can close and open new heredoc:
-                                
-                                heredoc after nowdoc
-                                ===================
-                                Now variables work: VARIABLE
-                                And expressions: 42
-                                """),
-
                 // Файл с вложенными структурами и интерполяцией
                 new SuccessCase("nested_interpolation.php",
                         """

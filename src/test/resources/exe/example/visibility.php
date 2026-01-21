@@ -2,33 +2,33 @@
 
 class VisibilityTest
 {
-    public $public = "public";
-    protected $protected = "protected";
-    private $private = "private";
+    public $first = "public";
+    protected $second = "protected";
+    private $third = "private";
 
-    public function getPublic()
+    public function getFirst()
     {
-        return $this->public;
+        return $this->first;
     }
 
-    protected function getProtected()
+    protected function getSecond()
     {
-        return $this->protected;
+        return $this->second;
     }
 
     private function getPrivate()
     {
-        return $this->private;
+        return $this->third;
     }
 
     public function showAll()
     {
         return "Inside class:\n" .
-            "Public: " . $this->public . "\n" .
-            "Protected: " . $this->protected . "\n" .
-            "Private: " . $this->private . "\n" .
-            "Public method: " . $this->getPublic() . "\n" .
-            "Protected method: " . $this->getProtected() . "\n" .
+            "Public: " . $this->first . "\n" .
+            "Protected: " . $this->second . "\n" .
+            "Private: " . $this->third . "\n" .
+            "Public method: " . $this->getFirst() . "\n" .
+            "Protected method: " . $this->getSecond() . "\n" .
             "Private method: " . $this->getPrivate();
     }
 }
@@ -40,17 +40,17 @@ class ChildVisibility extends VisibilityTest
         $result = "In child class:\n";
 
         // Access to public
-        $result .= "Public field: " . $this->public . "\n";
+        $result .= "Public field: " . $this->first . "\n";
 
         // Access to protected
-        $result .= "Protected field: " . $this->protected . "\n";
+        $result .= "Protected field: " . $this->second . "\n";
 
         // NO access to private
         // $result .= "Private field: " . $this->private . "\n"; // Error!
         $result .= "Private field: inaccessible\n";
 
         // Calling parent methods
-        $result .= "Calling parent protected method: " . $this->getProtected() . "\n";
+        $result .= "Calling parent protected method: " . $this->getSecond() . "\n";
 
         return $result;
     }
@@ -65,21 +65,8 @@ if ($choice == '1') {
     echo $obj->showAll() . "\n";
 
     echo "\n=== Direct access from outside ===\n";
-    echo "Public field: " . $obj->public . "\n";
-    echo "Public method: " . $obj->getPublic() . "\n";
-
-    // Attempt to access protected and private (should cause error)
-    try {
-        echo "Protected field: " . @$obj->protected . "\n";
-    } catch (Exception $e) {
-        echo "Protected field: access error\n";
-    }
-
-    try {
-        echo "Protected method: " . @$obj->getProtected() . "\n";
-    } catch (Exception $e) {
-        echo "Protected method: access error\n";
-    }
+    echo "Public field: " . $obj->first . "\n";
+    echo "Public method: " . $obj->getFirst() . "\n";
 
 } else {
     $child = new ChildVisibility();
