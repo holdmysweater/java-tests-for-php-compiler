@@ -673,15 +673,16 @@ public final class BasePhpValue {
         }
 
         // if both are number or numeric string/bool/null -> compare numbers
-        boolean aNumericish = a.isNumber() || a.isNull() || a.isBool() || a.isString();
-        boolean bNumericish = b.isNumber() || b.isNull() || b.isBool() || b.isString();
+        boolean aNumericish = a.isNumber() || a.isNull() || a.isBool() || isNumericStringStrict(a);
+        boolean bNumericish = b.isNumber() || b.isNull() || b.isBool() || isNumericStringStrict(b);
 
         if (aNumericish && bNumericish) {
-            PhpNumber x = a.toNumberForArithmetic(); // uses 0 for null/bool, parses string leading number
-            PhpNumber y = b.toNumberForArithmetic();
+            PhpNumber x = toNumberForRelational(a); // uses STRICT numeric string parsing
+            PhpNumber y = toNumberForRelational(b);
             return Double.compare(x.asDouble(), y.asDouble()) == 0;
         }
 
+        // otherwise compare as strings (this matches PHP for non-numeric strings)
         return Objects.equals(a.toPhpString(), b.toPhpString());
     }
 
