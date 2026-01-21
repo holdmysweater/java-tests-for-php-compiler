@@ -858,9 +858,14 @@ public final class BasePhpValue {
 
         // Normal array indexing
         if (arr.isArray()) {
+
             PhpKey k = PhpKey.fromValue(key);
             BasePhpValue v = arr.asArray().get(k);
-            return v == null ? NULL_VALUE : v;
+            if (v == null) {
+                System.err.println("Warning: Undefined array key " + k.toString());
+                return NULL_VALUE;
+            }
+            return v;
         }
 
         // PHP-style string offset access: $s[$i]
