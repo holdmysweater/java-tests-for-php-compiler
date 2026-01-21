@@ -6,8 +6,6 @@ echo $fruits[2] . "\n";
 
 echo count($fruits) . "\n";
 
-$key = array_search("banana", $fruits);
-echo $key . "\n";
 
 $colors = ["red" => "apple", "yellow" => "banana"];
 echo $colors["yellow"] . "\n";

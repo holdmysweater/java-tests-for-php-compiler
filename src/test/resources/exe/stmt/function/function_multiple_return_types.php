@@ -1,5 +1,6 @@
 <?php
-function getResult($type): string|int|array {
+function getResult($type): string|int|array
+{
     switch ($type) {
         case 'int':
             return 10;
@@ -12,5 +13,6 @@ function getResult($type): string|int|array {
 
 echo "Int: " . getResult('int') . "\n";
 echo "String: " . getResult('string') . "\n";
-echo "Array: " . gettype(getResult('array')) . "\n";
+print_r(getResult('array'));
 ?>
+

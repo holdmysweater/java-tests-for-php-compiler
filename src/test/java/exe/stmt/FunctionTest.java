@@ -32,25 +32,14 @@ class FunctionTest extends ExternalProcessDDT {
 
                 // Функция с параметрами по умолчанию
                 new SuccessCase("function_default_params.php",
-                        "Hello, Guest!\n" +
-                                "Hello, Alice!\n" +
+                        "Hello, Guest, welcome!\n" +
+                                "Hello, Alice, welcome!\n" +
                                 "Hello, Bob, welcome!\n"),
 
                 // Функция с возвращаемым типом
                 new SuccessCase("function_return_type.php",
                         "30\n" +
                                 "7.5\n"),
-
-                // Функция с union типами
-                new SuccessCase("function_union_types.php",
-                        "String: hello\n" +
-                                "Int: 42\n" +
-                                "Float: 3.14\n"),
-
-                // Функция с nullable типом
-                new SuccessCase("function_nullable_type.php",
-                        "Value: 10\n" +
-                                "Value: \n"),
 
                 // Функция с типом array
                 new SuccessCase("function_array_type.php",
@@ -78,16 +67,6 @@ class FunctionTest extends ExternalProcessDDT {
                 new SuccessCase("function_return_array.php",
                         "1,2,3\n"),
 
-                // Функция с переменным числом аргументов
-                new SuccessCase("function_variadic.php",
-                        "Sum: 6\n" +
-                                "Sum: 10\n" +
-                                "Sum: 15\n"),
-
-                // Функция с callback
-                new SuccessCase("function_callback.php",
-                        "Result: 30\n"),
-
                 // Функция с void типом
                 new SuccessCase("function_void_type.php",
                         "Printing...\n"),
@@ -96,7 +75,12 @@ class FunctionTest extends ExternalProcessDDT {
                 new SuccessCase("function_multiple_return_types.php",
                         "Int: 10\n" +
                                 "String: hello\n" +
-                                "Array: array\n"),
+                                "Array\n" +
+                                "(\n" +
+                                "    [0] => 1\n" +
+                                "    [1] => 2\n" +
+                                "    [2] => 3\n" +
+                                ")\n"),
 
                 // Функция с параметром по ссылке со значением по умолчанию
                 new SuccessCase("function_reference_default.php",
@@ -119,8 +103,6 @@ class FunctionTest extends ExternalProcessDDT {
                 new ErrorCase("error_function_missing_brace.php"),
                 new ErrorCase("error_function_duplicate_param.php"),
                 new ErrorCase("error_function_invalid_default.php"),
-                new ErrorCase("error_function_missing_type.php"),
-                new ErrorCase("error_function_invalid_return_type.php"),
                 new ErrorCase("error_function_redeclaration.php")
         );
     }

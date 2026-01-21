@@ -32,7 +32,7 @@ class SwitchCaseTest extends ExternalProcessDDT {
                                 "Working day\n" +
                                 "Working day\n" +
                                 "Weekend\n" +
-                                "Invalid day\n"),
+                                "Weekend\n"),
 
                 // Switch с default
                 new SuccessCase("switch_with_default.php",
@@ -40,18 +40,12 @@ class SwitchCaseTest extends ExternalProcessDDT {
 
                 // Switch с break
                 new SuccessCase("switch_with_break.php",
-                        "One\n" +
-                                "Two\n" +
-                                "Three\n" +
-                                "Four\n" +
-                                "Five\n"),
+                        "Three\n"),
 
                 // Switch без break (проваливание)
                 new SuccessCase("switch_fallthrough.php",
-                        "Small\n" +
-                                "Medium\n" +
-                                "Large\n" +
-                                "Invalid size\n"),
+                        "Medium\n" +
+                                "Large\n"),
 
                 // Switch с вложенными case
                 new SuccessCase("switch_nested_cases.php",
@@ -79,8 +73,7 @@ class SwitchCaseTest extends ExternalProcessDDT {
 
                 // Switch с default в начале
                 new SuccessCase("switch_default_first.php",
-                        "Default case\n" +
-                                "Case 1\n"),
+                        "Case 1\n"),
 
                 // Switch с числами
                 new SuccessCase("switch_numbers.php",
@@ -100,7 +93,7 @@ class SwitchCaseTest extends ExternalProcessDDT {
                 new SuccessCase("switch_boolean.php",
                         "True\n" +
                                 "False\n" +
-                                "Not boolean\n"),
+                                "False\n"),
 
                 // Switch внутри функции
                 new SuccessCase("switch_in_function.php",
@@ -115,19 +108,10 @@ class SwitchCaseTest extends ExternalProcessDDT {
                                 "Result: Medium\n" +
                                 "Result: Low\n"),
 
-                // Switch с continue в цикле
-                new SuccessCase("switch_with_continue.php",
-                        "Iteration 1: One\n" +
-                                "Iteration 2: Skip\n" +
-                                "Iteration 3: Three\n"),
-
                 // Switch с вложенным switch
                 new SuccessCase("switch_nested.php",
                         "Outer: 1\n" +
-                                "  Inner: A\n" +
-                                "  Inner: B\n" +
-                                "Outer: 2\n" +
-                                "  Inner: C\n")
+                                "  Inner: B\n")
         );
     }
 

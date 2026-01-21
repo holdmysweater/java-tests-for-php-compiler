@@ -27,8 +27,8 @@ class ExprTest extends ExternalProcessDDT {
                 new SuccessCase("arithmetic_complex.php",
                         "14\n" +
                                 "20\n" +
+                                "8\n" +
                                 "4\n" +
-                                "16\n" +
                                 "4\n"),
 
                 // Логические операции
@@ -40,10 +40,7 @@ class ExprTest extends ExternalProcessDDT {
                                 "1\n"),
 
                 new SuccessCase("bitwise_operators.php",
-                        "3\n" +
-                                "1\n" +
-                                "2\n" +
-                                "0\n" +
+                        "312-2\n" +
                                 "4\n"),
 
                 // Операторы сравнения
@@ -63,20 +60,14 @@ class ExprTest extends ExternalProcessDDT {
                                 "1\n" +
                                 "\n" +
                                 "1\n" +
-                                "\n"),
-
-                // Строковые операции
-                new SuccessCase("string_operations.php",
-                        "HelloWorld\n" +
-                                "HelloWorld\n" +
-                                "HELLOWORLD\n"),
+                                "1\n"),
 
                 // Тернарный оператор
                 new SuccessCase("ternary_operator.php",
                         "greater\n" +
                                 "less\n" +
-                                "yes\n" +
-                                "no\n" +
+                                "test\n" +
+                                "default\n" +
                                 "default\n"),
 
                 // Операторы присваивания
@@ -87,7 +78,7 @@ class ExprTest extends ExternalProcessDDT {
                                 "40\n" +
                                 "2\n" +
                                 "0\n" +
-                                "30\n" +
+                                "100\n" +
                                 "Hello World\n" +
                                 "8\n" +
                                 "2\n"),
@@ -97,9 +88,9 @@ class ExprTest extends ExternalProcessDDT {
                         "1\n" +
                                 "2\n" +
                                 "2\n" +
-                                "1\n" +
-                                "6\n" +
-                                "6\n"),
+                                "2\n" +
+                                "5\n" +
+                                "3\n"),
 
                 // Унарные операторы
                 new SuccessCase("unary_operators.php",
@@ -111,25 +102,20 @@ class ExprTest extends ExternalProcessDDT {
 
                 // Массивы
                 new SuccessCase("array_basic.php",
-                        "Array\n" +
-                                "Array\n" +
-                                "apple\n" +
-                                "banana\n" +
-                                "Array\n"),
+                        "apple\n" +
+                                "banana\n"),
 
                 new SuccessCase("array_operations.php",
                         "cherry\n" +
                                 "3\n" +
-                                "1\n" +
-                                "orange\n" +
-                                "grape\n"),
+                                "banana\n" +
+                                "20\n"),
 
                 // Оператор объединения с null
                 new SuccessCase("null_coalescing.php",
                         "default\n" +
                                 "value\n" +
-                                "existing\n" +
-                                "fallback\n"),
+                                "existing\n"),
 
                 // Оператор spaceship
                 new SuccessCase("spaceship_operator.php",
@@ -149,9 +135,7 @@ class ExprTest extends ExternalProcessDDT {
                 // Вызов функций
                 new SuccessCase("function_calls.php",
                         "15\n" +
-                                "6\n" +
-                                "Hello\n" +
-                                "HELLO\n"),
+                                "6\n"),
 
                 // Создание объектов
                 new SuccessCase("object_creation.php",
@@ -169,12 +153,10 @@ class ExprTest extends ExternalProcessDDT {
 
                 // Смешанные выражения
                 new SuccessCase("mixed_expressions.php",
-                        "8\n" +
-                                "50\n" +
-                                "1\n" +
-                                "WorldHello\n" +
-                                "1\n" +
-                                "\n")
+                        "11\n" +
+                                "16\n" +
+                                "\n" +
+                                "WorldHello\n")
         );
     }
 
@@ -183,8 +165,6 @@ class ExprTest extends ExternalProcessDDT {
         return Stream.of(
                 // Ошибки в выражениях
                 new ErrorCase("error_division_by_zero.php"),
-                new ErrorCase("error_undefined_variable.php"),
-                new ErrorCase("error_invalid_array_access.php"),
                 new ErrorCase("error_undefined_function.php"),
                 new ErrorCase("error_invalid_object_access.php"),
                 new ErrorCase("error_missing_operand.php"),

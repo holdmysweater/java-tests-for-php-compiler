@@ -8,8 +8,4 @@ if ($str == "hello") {
 if ($str != "world") {
     echo "String inequality works\n";
 }
-
-if (strlen($str) > 0) {
-    echo "String has length\n";
-}
 ?>

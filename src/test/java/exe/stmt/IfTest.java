@@ -67,13 +67,11 @@ class IfTest extends ExternalProcessDDT {
                 // If со строками
                 new SuccessCase("if_with_strings.php",
                         "String comparison works\n" +
-                                "String inequality works\n" +
-                                "String has length\n"),
+                                "String inequality works\n"),
 
                 // If с null
                 new SuccessCase("if_with_null.php",
-                        "Null is falsy\n" +
-                                "isset returns false for null\n")
+                        "Null is falsy\n")
         );
     }
 

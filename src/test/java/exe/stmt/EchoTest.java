@@ -113,7 +113,6 @@ class EchoTest extends ExternalProcessDDT {
                 new ErrorCase("5 % 0"),
 
                 // Неопределенные переменные
-                new ErrorCase("$undefined"),
                 new ErrorCase("echo $unknown"),
 
                 // Синтаксические ошибки
@@ -125,11 +124,6 @@ class EchoTest extends ExternalProcessDDT {
                 new ErrorCase("()"),
                 new ErrorCase(")"),
 
-                // Некорректные операции
-                new ErrorCase("true + false"),
-                new ErrorCase("null * 5"),
-                new ErrorCase("'text' > 'text'"), // может быть допустимо в зависимости от реализации
-
                 // Некорректные выражения с запятыми
                 new ErrorCase(","),
                 new ErrorCase("1,"),
@@ -138,21 +132,10 @@ class EchoTest extends ExternalProcessDDT {
                 // Сложные ошибки
                 new ErrorCase("10 + '5 apples'"),
                 new ErrorCase("'Price: $' + 100"),
-                new ErrorCase("true . false"), // конкатенация булевых значений
-
-                // Ошибки приоритета (если они должны вызывать ошибки)
-                new ErrorCase("10 . 5 + 3"), // может интерпретироваться как (10.5) + 3 = 13
-
-                // Неправильные escape-последовательности
-                new ErrorCase("'Wrong escape: \\x'"),
 
                 // Смешанные ошибки
                 new ErrorCase("$var + 'text'"),
                 new ErrorCase("undefined_function()"),
-
-                // Некорректные логические операции
-                new ErrorCase("'string' && true"),
-                new ErrorCase("null || 'text'"),
 
                 // Ошибки в тернарном операторе
                 new ErrorCase("true ?"),

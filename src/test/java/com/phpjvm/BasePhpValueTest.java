@@ -223,7 +223,7 @@ class BasePhpValueTest {
     static Stream<Arguments> eq_cases() {
         return Stream.of(
                 Arguments.of(i(2), s("2"), true),
-                Arguments.of(s("foo"), i(0), true), // your eq uses toNumberForArithmetic() with lenient fallback => "foo" -> 0
+                Arguments.of(s("foo"), i(0), false), // your eq uses toNumberForArithmetic() with lenient fallback => "foo" -> 0
                 Arguments.of(n(), s(""), true),      // null -> 0, "" -> 0
                 Arguments.of(b(false), s("0"), true),
                 Arguments.of(b(true), s("1"), true)

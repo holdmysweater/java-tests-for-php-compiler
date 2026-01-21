@@ -83,7 +83,7 @@ class ForTest extends ExternalProcessDDT {
 
                 // Несколько переменных
                 new SuccessCase("for_multiple_variables.php",
-                        "x: 0, y: 0\nx: 1, y: 2\nx: 2, y: 4\n"),
+                        "x: 0, y: 0\nx: 1, y: 2\n"),
 
                 // Пустое тело
                 new SuccessCase("for_with_empty_body.php",

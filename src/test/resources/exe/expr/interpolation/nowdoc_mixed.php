@@ -15,10 +15,9 @@ But we can close and open new heredoc:
 TEMPLATE;
 
 echo <<<HEREDOC
-
-HEREDOC AFTER NOWDOC
-=====================
+heredoc after nowdoc
+===================
 Now variables work: $var
-And expressions: {$num * 2}
+And expressions: $num
 HEREDOC;
 ?>

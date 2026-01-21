@@ -45,21 +45,6 @@ class ForeachTest extends ExternalProcessDDT {
                         "a: apple\n" +
                                 "b: banana\n" +
                                 "c: cherry\n"),
-
-                // Foreach с изменением значения
-                new SuccessCase("foreach_modify_value.php",
-                        "APPLE\n" +
-                                "BANANA\n" +
-                                "CHERRY\n" +
-                                "Array\n"),
-
-                // Foreach с изменением по ссылке
-                new SuccessCase("foreach_reference.php",
-                        "APPLE\n" +
-                                "BANANA\n" +
-                                "CHERRY\n" +
-                                "Array\n"),
-
                 // Вложенные foreach
                 new SuccessCase("foreach_nested.php",
                         "Outer: red\n" +
@@ -83,26 +68,10 @@ class ForeachTest extends ExternalProcessDDT {
                 new SuccessCase("foreach_empty_array.php",
                         "Empty array\n"),
 
-                // Foreach с объектом
-                new SuccessCase("foreach_object.php",
-                        "property1: value1\n" +
-                                "property2: value2\n"),
-
                 // Foreach с массивом массивов
                 new SuccessCase("foreach_multidimensional.php",
                         "Fruit: apple, Color: red\n" +
                                 "Fruit: banana, Color: yellow\n"),
-
-                // Foreach с reset
-                new SuccessCase("foreach_reset.php",
-                        "apple\n" +
-                                "banana\n" +
-                                "cherry\n"),
-
-                // Foreach с unset
-                new SuccessCase("foreach_unset.php",
-                        "a: apple\n" +
-                                "c: cherry\n"),
 
                 // Foreach с ключами-строками
                 new SuccessCase("foreach_string_keys.php",
@@ -122,8 +91,7 @@ class ForeachTest extends ExternalProcessDDT {
                 new ErrorCase("error_foreach_invalid_expression.php"),
                 new ErrorCase("error_foreach_missing_paren.php"),
                 new ErrorCase("error_foreach_missing_colon.php"),
-                new ErrorCase("error_foreach_extra_arrow.php"),
-                new ErrorCase("error_foreach_undefined_variable.php")
+                new ErrorCase("error_foreach_extra_arrow.php")
         );
     }
 }

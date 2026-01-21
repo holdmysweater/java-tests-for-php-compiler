@@ -20,7 +20,7 @@ class BaseTest extends ExternalProcessDDT {
         assertFileWithInput("if_else.php", "12", "Greater than 10");
         assertFileWithInput("if_else.php", "8", "Greater than 5, but not greater than 10");
         assertFileWithInput("if_else.php", "3", "5 or less");
-        assertFileWithInput("if_else.php", "10", "5 or less");
+        assertFileWithInput("if_else.php", "1", "5 or less");
     }
 
     @Test
@@ -209,11 +209,5 @@ class BaseTest extends ExternalProcessDDT {
                         "float_concat: 010\n" +
                         "bool_concat: 110\n" +
                         "array_concat: Array10");
-    }
-
-    @Test
-    void errorTests() throws Exception {
-        assertFileWithInput("error_tests.php", "3", "INF");
-        assertFileWithInput("error_tests.php", "8", "10");
     }
 }

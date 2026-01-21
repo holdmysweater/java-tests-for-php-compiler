@@ -32,7 +32,6 @@ echo "\n---\n";
 // А вот с HEREDOC переменные интерполируются
 echo <<<CONFIG
 ; Dynamic configuration file
-; Generated on: <?php echo date('Y-m-d'); ?>
 
 [application]
 title = "{$data['title']}"

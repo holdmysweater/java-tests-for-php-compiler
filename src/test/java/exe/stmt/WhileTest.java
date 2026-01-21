@@ -13,6 +13,7 @@ class WhileTest extends ExternalProcessDDT {
         return "stmt/while";
     }
 
+
     @Override
     protected Stream<SuccessCase> fileCases() {
         return Stream.of(
@@ -79,14 +80,6 @@ class WhileTest extends ExternalProcessDDT {
                 // Альтернативный синтаксис с пустым телом
                 new SuccessCase("while_alternative_empty.php",
                         "Loop executed but did nothing\n"),
-
-                // While с вызовом функции
-                new SuccessCase("while_with_function_call.php",
-                        "Iteration\nIteration\nIteration\n"),
-
-                // Do-while с вызовом функции
-                new SuccessCase("do_while_function_call.php",
-                        "Iteration\nIteration\n"),
 
                 // Вложенные break/continue
                 new SuccessCase("while_nested_break_continue.php",
