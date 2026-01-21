@@ -2,7 +2,7 @@
 
 class ParentClass
 {
-    protected $value;
+    public $value;
 
     public function __construct($value)
     {
@@ -22,12 +22,16 @@ class ParentClass
 
 class ChildClass extends ParentClass
 {
-    private $extra;
+    public $extra;
 
     public function __construct($value, $extra)
     {
-        parent::__construct($value);
-        $this->extra = $extra;
+        // Очищаем от символов новой строки
+        $cleanValue = trim($value);
+        $cleanExtra = trim($extra);
+
+        parent::__construct($cleanValue);
+        $this->extra = $cleanExtra;
     }
 
     // Переопределение метода
@@ -42,7 +46,7 @@ class ChildClass extends ParentClass
     public function getFullInfo()
     {
         $parentInfo = parent::getInfo();
-        return $parentInfo . "Child: " . $this->extra;
+        return $parentInfo . " Child: " . $this->extra;
     }
 
     // Метод без super вызова
@@ -52,9 +56,9 @@ class ChildClass extends ParentClass
     }
 }
 
-// Чтение ввода
-$value = fgets(STDIN);
-$extra = fgets(STDIN);
+// Чтение ввода с очисткой
+$value = trim(fgets(STDIN));
+$extra = trim(fgets(STDIN));
 
 $child = new ChildClass($value, $extra);
 

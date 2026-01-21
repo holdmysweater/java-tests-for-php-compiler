@@ -104,9 +104,9 @@ class BaseTest extends ExternalProcessDDT {
 
     @Test
     void superCallTest() throws Exception {
-        assertFileWithInput("super_call.php", "10 5",
+        assertFileWithInput("super_call.php", "10\n5\n",
                 "1. calculate() with super: 25\n" +
-                        "2. getFullInfo() with super: Parent: 10\n" + "Child: 5\n\n" +
+                        "2. getFullInfo() with super: Parent: 10 Child: 5\n" +
                         "3. calculateDirectly() without super: 30\n" +
                         "4. Calling parent method through child: Parent: 10");
     }
