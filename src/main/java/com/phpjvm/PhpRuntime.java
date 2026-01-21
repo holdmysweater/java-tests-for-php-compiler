@@ -204,6 +204,8 @@ public final class PhpRuntime {
         if ("void".equals(allowed)) return "null".equals(actual);
         if ("null".equals(allowed)) return "null".equals(actual);
 
+        if ("float".equals(allowed) && "int".equals(actual)) return true;
+
         return allowed.equals(actual);
     }
 
