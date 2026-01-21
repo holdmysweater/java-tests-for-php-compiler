@@ -844,6 +844,40 @@ public final class BasePhpValue {
         return of(false);
     }
 
+    public static BasePhpValue passByValue(BasePhpValue v) {
+        v = deref(v);
+        if (v == null) return NULL_VALUE;
+
+        if (!v.isArray()) return v;
+
+        // deep-copy arrays so mutations in callee don't affect caller
+        IdentityHashMap<PhpArray, PhpArray> seen = new IdentityHashMap<>();
+        PhpArray copied = deepCopyArray(v.asArray(), seen);
+        return new BasePhpValue(Type.ARRAY, copied);
+    }
+
+    private static PhpArray deepCopyArray(PhpArray src, IdentityHashMap<PhpArray, PhpArray> seen) {
+        if (src == null) return new PhpArray();
+
+        PhpArray already = seen.get(src);
+        if (already != null) return already;
+
+        PhpArray dst = new PhpArray();
+        seen.put(src, dst);
+
+        dst.nextAutoIndex = src.nextAutoIndex;
+
+        for (Map.Entry<PhpKey, BasePhpValue> e : src.map.entrySet()) {
+            BasePhpValue vv = e.getValue();
+            // preserve references/objects; only recursively copy nested arrays
+            if (vv != null && vv.isArray()) {
+                vv = new BasePhpValue(Type.ARRAY, deepCopyArray(vv.asArray(), seen));
+            }
+            dst.map.put(e.getKey(), vv == null ? NULL_VALUE : vv);
+        }
+        return dst;
+    }
+
     // ---------- Array operations ----------
 
     /**
