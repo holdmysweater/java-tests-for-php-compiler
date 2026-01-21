@@ -965,4 +965,10 @@ public final class PhpRuntime {
         }
     }
 
+    public static BasePhpValue undefinedVariable(String name) {
+        // If you want PHP-like behavior instead:
+        System.err.println("Notice: Undefined variable: " + name);
+        return BasePhpValue.NULL_VALUE;
+    }
+
 }
