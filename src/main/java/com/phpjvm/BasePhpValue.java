@@ -850,10 +850,37 @@ public final class BasePhpValue {
      * If key missing: returns NULL_VALUE (PHP would also raise a notice/warning in many cases).
      */
     public static BasePhpValue arrayGet(BasePhpValue arr, BasePhpValue key) {
-        if (!arr.isArray()) throw new PhpRuntimeException("Cannot index non-array type: " + arr.type);
-        PhpKey k = PhpKey.fromValue(key);
-        BasePhpValue v = arr.asArray().get(k);
-        return v == null ? NULL_VALUE : v;
+        arr = deref(arr);
+        key = deref(key);
+        if (arr == null) arr = NULL_VALUE;
+        if (key == null) key = NULL_VALUE;
+
+        // Normal array indexing
+        if (arr.isArray()) {
+            PhpKey k = PhpKey.fromValue(key);
+            BasePhpValue v = arr.asArray().get(k);
+            return v == null ? NULL_VALUE : v;
+        }
+
+        // PHP-style string offset access: $s[$i]
+        if (arr.isString()) {
+            String s = arr.asStringStrict();
+
+            // convert key -> int (pragmatic)
+            long idxL = key.toNumberForArithmetic().asLong();
+            int idx = (int) idxL;
+
+            // support negative offsets (nice to have)
+            int len = s.length();
+            if (idx < 0) idx = len + idx;
+
+            // out of range: PHP typically returns "" (and warns)
+            if (idx < 0 || idx >= len) return of("");
+
+            return of(String.valueOf(s.charAt(idx)));
+        }
+
+        throw new PhpRuntimeException("Cannot index non-array type: " + arr.type);
     }
 
     /**
