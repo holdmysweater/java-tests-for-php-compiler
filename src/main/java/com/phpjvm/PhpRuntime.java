@@ -863,6 +863,14 @@ public final class PhpRuntime {
         if (obj == null) throw new BasePhpValue.PhpRuntimeException("Access to property on null");
         if (propName == null) propName = "";
 
+        // NEW: disallow accessing a declared static property via $this->prop
+        PropLookup staticHit = findStaticProp(obj.getPhpClass(), propName);
+        if (staticHit != null) {
+            throw new BasePhpValue.PhpRuntimeException(
+                    "Accessing static property " + staticHit.declClass.getName() + "::$" + propName + " as non static"
+            );
+        }
+
         // If declared, enforce visibility; else treat as dynamic public property
         PropLookup hit = findInstanceProp(obj.getPhpClass(), propName);
         if (hit != null) {
@@ -875,6 +883,14 @@ public final class PhpRuntime {
     public static BasePhpValue setPropCtx(PhpObject obj, String propName, BasePhpValue value, String callerClassName) {
         if (obj == null) throw new BasePhpValue.PhpRuntimeException("Access to property on null");
         if (propName == null) propName = "";
+
+        // NEW: disallow accessing a declared static property via $this->prop
+        PropLookup staticHit = findStaticProp(obj.getPhpClass(), propName);
+        if (staticHit != null) {
+            throw new BasePhpValue.PhpRuntimeException(
+                    "Accessing static property " + staticHit.declClass.getName() + "::$" + propName + " as non static"
+            );
+        }
 
         PropLookup hit = findInstanceProp(obj.getPhpClass(), propName);
         if (hit != null) {
